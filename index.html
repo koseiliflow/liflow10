@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Liflow 1.4 — iPhone UI improvements</title>
+<style>
+:root{--bg:#f7f8f5;--panel:#fff;--ink:#202a2a;--muted:#7c8985;--line:#e8ece7;--green:#648b78;--green2:#e8f0eb;--blue:#e9eff8;--orange:#f7eee2;--shadow:0 8px 28px #26372b0b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input,select{font:inherit}button{cursor:pointer;border:0} .app{display:flex;min-height:100vh}
+.sidebar{width:230px;background:#fff;border-right:1px solid var(--line);padding:28px 16px;display:flex;flex-direction:column;gap:28px}
+.brand{font-size:24px;font-weight:750;letter-spacing:-1px;padding:0 12px}.brand span{color:var(--green)}
+.sub{font-size:10px;color:var(--muted);letter-spacing:1.5px;padding:0 12px;margin-top:-24px}
+.nav{display:grid;gap:6px}.nav button{background:transparent;text-align:left;padding:11px 13px;border-radius:10px;color:#66736e;display:flex;gap:12px;align-items:center}.nav button.active,.nav button:hover{background:var(--green2);color:#365e4a;font-weight:650}.nav i{font-style:normal;width:18px;text-align:center}
+.sidebar-note{margin-top:auto;background:#f4f7f3;padding:15px;border-radius:14px;color:#68766e;font-size:12px}
+main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margin:auto;width:100%}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}.eyebrow{font-size:11px;letter-spacing:1.4px;color:var(--muted);text-transform:uppercase} .liflow-top-logo{font-size:16px;font-weight:750;letter-spacing:-.5px;color:var(--ink);text-transform:none}.liflow-top-logo span{color:var(--green)}.top h1{font-size:27px;letter-spacing:-.8px;margin:5px 0 0}.datepill{border:1px solid var(--line);background:#fff;border-radius:30px;padding:9px 14px;color:#68766e}
+.view{display:none}.view.show{display:block}.grid{display:grid;grid-template-columns:1.35fr 1fr;gap:18px}.card{background:var(--panel);border:1px solid var(--line);border-radius:17px;padding:20px;box-shadow:var(--shadow);min-width:0}.card h2{font-size:15px;margin:0 0 15px;letter-spacing:-.2px}.muted{color:var(--muted)}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}.stat{background:#fff;border:1px solid var(--line);padding:17px;border-radius:15px}.stat small{color:var(--muted)}.stat strong{display:block;font-size:27px;margin-top:5px;letter-spacing:-1px}.stat em{font-style:normal;color:var(--green);font-size:11px}
+.progress{height:7px;background:#edf1ed;border-radius:20px;overflow:hidden}.progress span{display:block;height:100%;background:var(--green);border-radius:20px}
+.taskrow{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #f0f2ef}.taskrow:last-child{border:0}.taskrow input{accent-color:var(--green);width:16px;height:16px}.taskname{flex:1;min-width:0}.taskname.done{text-decoration:line-through;color:#9aa49f}.tag{font-size:10px;padding:4px 8px;border-radius:20px;background:var(--green2);color:#52745f;white-space:nowrap}.tag.blue{background:var(--blue);color:#5c7292}.tag.orange{background:var(--orange);color:#9a7449}
+.btn{background:var(--green);color:white;border-radius:9px;padding:9px 14px;font-weight:650}.btn.light{background:var(--green2);color:#42634f}.btn.ghost{background:#f4f6f3;color:#64716b}.btn.small{padding:6px 10px;font-size:12px}.sectionhead{display:flex;align-items:center;justify-content:space-between;margin:0 0 15px}.sectionhead h2{margin:0}
+.schedule-list{display:grid;gap:9px}.event{display:flex;gap:12px;align-items:center}.eventtime{width:48px;color:var(--muted);font-variant-numeric:tabular-nums;font-size:12px}.eventbody{flex:1;background:#f0f5f0;border-left:3px solid var(--green);padding:9px 12px;border-radius:7px}.eventbody.blue{background:#f0f3f9;border-color:#8398b8}.eventbody.orange{background:#faf4eb;border-color:#d4a56e}.eventbody b{display:block;font-size:13px}.eventbody small{color:var(--muted)}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px}.toolbar select,.toolbar input,.field{border:1px solid var(--line);border-radius:9px;padding:9px 11px;background:white;color:var(--ink)}
+.day-layout{display:grid;grid-template-columns:minmax(230px,.75fr) minmax(400px,1.5fr);gap:16px;align-items:start}
+.task-pool{min-height:300px}.draggable{border:1px solid var(--line);padding:11px;border-radius:10px;margin:8px 0;background:#fff;cursor:grab}.draggable:active{cursor:grabbing}.draggable b{display:block;font-size:13px}.draggable small{color:var(--muted)}
+.timeline{border:1px solid var(--line);border-radius:13px;background:white;overflow:hidden}.timeline-head{padding:13px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}.slot{height:58px;border-bottom:1px solid #f0f2ef;display:grid;grid-template-columns:60px 1fr;position:relative}.slot:last-child{border:0}.slot time{padding:8px 10px;color:#929d97;font-size:11px}.dropzone{padding:4px 8px;min-width:0}.slot.dragover .dropzone{background:#eaf2ec}.placed{font-size:12px;border-left:3px solid var(--green);background:#edf4ef;border-radius:6px;padding:5px 8px;margin-bottom:3px;display:flex;justify-content:space-between;gap:8px}.placed button{background:transparent;color:#819087}
+.monthgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}.weekday{text-align:center;color:var(--muted);font-size:11px;padding:8px}.daycell{min-height:95px;background:#fff;border:1px solid var(--line);border-radius:9px;padding:8px;font-size:12px}.daycell.today{border-color:var(--green);background:#f2f7f3}.daycell .date{font-weight:700}.calitem{display:block;margin-top:5px;padding:3px 5px;border-radius:5px;background:var(--green2);font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.timerbox{text-align:center;padding:25px}.timer{font-size:54px;letter-spacing:-2px;font-variant-numeric:tabular-nums;margin:15px 0}.timer-controls{display:flex;justify-content:center;gap:9px}.formrow{display:flex;gap:8px;flex-wrap:wrap}.formrow input,.formrow select{flex:1;min-width:120px}.empty{padding:25px;text-align:center;color:var(--muted);font-size:13px}
+.schedule-editor{margin-bottom:16px}.schedule-form{display:grid;grid-template-columns:minmax(170px,2fr) repeat(3,minmax(110px,1fr)) minmax(140px,1fr) auto;gap:9px;align-items:end}.schedule-form label{display:grid;gap:5px;color:var(--muted);font-size:11px}.schedule-form input,.schedule-form select{width:100%;min-width:0;border:1px solid var(--line);border-radius:9px;padding:9px 10px;background:#fff;color:var(--ink)}.schedule-help{margin:10px 0 0;font-size:11px;color:var(--muted)}.repeat-until{display:flex;gap:8px;align-items:center;margin-top:10px;color:var(--muted);font-size:11px}.repeat-until input{border:1px solid var(--line);border-radius:8px;padding:7px 9px}.repeat-chip{display:inline-block;margin-left:5px;font-size:10px;color:#587765;background:#e8f0eb;border-radius:20px;padding:2px 6px}.task-comparison{margin-top:6px;max-width:490px}.comparison-values{display:flex;gap:13px;flex-wrap:wrap;font-size:11px;color:var(--muted)}.comparison-values b{color:#43534a;font-weight:650}.comparison-delta{font-size:10px;margin-left:auto}.comparison-delta.over{color:#b36e51}.comparison-delta.under{color:#57836a}.comparison-delta.none{color:#929d97}.compare-progress{height:4px;margin-top:5px;max-width:260px}.compare-progress span{background:#91ae9a}.placed{align-items:flex-start}.placed span{flex:1}.slot{cursor:pointer}.slot:hover .dropzone{background:#fafcf9}
+@media(max-width:1100px){.schedule-form{grid-template-columns:repeat(3,minmax(0,1fr))}.schedule-form .wide{grid-column:span 2}}
+@media(max-width:600px){.schedule-form{grid-template-columns:repeat(2,minmax(0,1fr))}.schedule-form .wide{grid-column:span 2}.repeat-until{flex-wrap:wrap}}
+@media(max-width:850px){.sidebar{width:70px;padding:22px 8px}.brand{font-size:0;padding:0;text-align:center}.brand:after{content:"L.";font-size:22px}.sub,.nav .label,.sidebar-note{display:none}.nav button{justify-content:center;padding:12px 5px}.nav i{font-size:18px}main{padding:23px 16px}.grid{grid-template-columns:1fr}.day-layout{grid-template-columns:1fr}.task-pool{min-height:0}.stats{gap:7px}.stat{padding:12px}.stat strong{font-size:22px}}
+@media(max-width:520px){.sidebar{position:fixed;z-index:5;bottom:0;left:0;right:0;width:auto;height:62px;padding:5px 8px;border-right:0;border-top:1px solid var(--line);display:block}.brand,.sub,.sidebar-note{display:none}.nav{display:flex;justify-content:space-around}.nav button{display:flex;flex-direction:column;justify-content:center;gap:3px;font-size:10px;padding:4px 5px;min-width:58px;min-height:54px}.nav .label{display:block}.nav i{font-size:24px;line-height:1.15;width:auto;font-weight:600}main{padding:22px 13px 85px}.top h1{font-size:23px}.datepill{font-size:11px}.stats{grid-template-columns:repeat(3,1fr)}.stat strong{font-size:19px}.daycell{min-height:72px;padding:5px}.calitem{font-size:9px}}
+
+/* Prototype 0.4 additions */
+.task-form{display:flex;gap:9px;flex-wrap:wrap;align-items:end;margin-bottom:10px}
+.task-form>.task-title-input{flex:2 1 190px;min-width:180px}
+.task-field{display:grid;gap:4px;flex:1 1 125px;min-width:112px;color:var(--muted);font-size:10px}
+.task-field input,.task-field select{width:100%;min-width:0;border:1px solid var(--line);border-radius:9px;padding:9px 10px;background:#fff;color:var(--ink)}
+.task-field.priority-field{flex:0 1 105px;min-width:95px}
+.task-form>.btn{flex:0 0 auto}
+.task-meta{font-size:10px;color:var(--muted);display:flex;flex-wrap:wrap;gap:5px 9px;margin-top:4px}
+.task-meta .late{color:#b36e51;font-weight:650}
+.tag-dot{display:inline-flex;align-items:center;gap:5px;border-radius:20px;padding:2px 7px;font-size:10px;white-space:nowrap}
+.tag-dot:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.tag-legend{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.timeline-body{position:relative;height:1140px;min-width:0;background:#fff;overflow:hidden}
+.hour-grid{position:absolute;inset:0;pointer-events:none}
+.hour-line{height:60px;display:grid;grid-template-columns:60px minmax(0,1fr);position:relative;border-bottom:1px solid #edf0ed}
+.hour-line:after{content:"";position:absolute;left:60px;right:0;top:30px;border-top:1px dashed #f0f2ef}
+.hour-line time{padding:5px 9px;color:#929d97;font-size:11px;font-variant-numeric:tabular-nums}
+.event-layer{position:absolute;left:60px;right:7px;top:0;bottom:0;z-index:2}
+.event-layer.dragover{background:#eaf2ec66}
+.placed{position:absolute;margin:0;padding:3px 6px;border-left:3px solid;border-radius:6px;display:block;overflow:visible;font-size:11px;line-height:1.25;box-shadow:0 1px 3px #26372b10;min-width:0;cursor:pointer}
+.placed .event-title{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:13px;font-weight:650}
+.placed .event-time{display:block;font-size:9px;opacity:.78;white-space:nowrap}
+.placed button{position:absolute;right:1px;top:1px;background:#ffffffc9;color:#59665e;border-radius:4px;width:14px;height:14px;line-height:12px;padding:0;font-size:12px;z-index:3}
+.placed.short .event-title,.placed.short .event-time{display:none}
+.placed.medium .event-time{display:none}
+.schedule-form{grid-template-columns:minmax(155px,1.8fr) repeat(5,minmax(95px,1fr)) auto}
+@media(max-width:1100px){.schedule-form{grid-template-columns:repeat(3,minmax(0,1fr))}.schedule-form .wide{grid-column:span 2}}
+@media(max-width:700px){.task-form>.task-title-input{flex-basis:100%}.task-field{flex-basis:calc(50% - 8px)}.schedule-form{grid-template-columns:repeat(2,minmax(0,1fr))}.schedule-form .wide{grid-column:span 2}}
+@media(max-width:600px){.timeline-body{height:1140px}.day-layout{grid-template-columns:minmax(0,1fr)}.task-field{flex-basis:calc(50% - 8px)}}
+
+
+/* Liflow 0.5 calendar interactions */
+.sheet-backdrop{position:fixed;inset:0;background:#17231d55;z-index:30;opacity:0;pointer-events:none;transition:opacity .22s}
+.sheet-backdrop.open{opacity:1;pointer-events:auto}
+.bottom-sheet{position:fixed;z-index:31;left:50%;bottom:0;transform:translate(-50%,105%);width:min(680px,100%);max-height:88vh;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:22px 22px 0 0;padding:18px 22px 28px;box-shadow:0 -16px 50px #17231d22;transition:transform .28s cubic-bezier(.2,.8,.2,1)}
+.bottom-sheet.open{transform:translate(-50%,0)}.sheet-grip{width:42px;height:4px;background:#dce3dd;border-radius:9px;margin:0 auto 16px}.sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}.sheet-head h2{margin:0;font-size:18px}.sheet-close{background:#f1f4f1;border-radius:50%;width:32px;height:32px;font-size:18px;color:#66736e}
+.sheet-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;min-width:0}.sheet-fields label{display:grid;gap:5px;color:var(--muted);font-size:11px;min-width:0;overflow:hidden}.sheet-fields label.full{grid-column:1/-1}.sheet-fields input,.sheet-fields select,.sheet-fields textarea{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;border:1px solid var(--line);border-radius:10px;padding:10px 8px;background:#fbfcfa;color:var(--ink);font:inherit;font-size:14px;appearance:auto}.sheet-fields textarea{min-height:76px;resize:vertical}.sheet-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}.detail-meta{display:flex;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:12px}.detail-note{background:#f7f9f6;padding:12px;border-radius:10px;margin-top:14px;white-space:pre-wrap}.placed,.calitem{cursor:grab;touch-action:pan-y}.placed:active,.calitem:active{cursor:grabbing}.daycell.dragover{outline:2px dashed var(--green);background:#edf5ef}.event-layer.dragover{background:#edf5ef}.longpress-hint{font-size:11px;color:var(--muted)}
+@media(max-width:600px){.bottom-sheet{padding:14px 16px calc(22px + env(safe-area-inset-bottom));max-height:calc(92vh - env(safe-area-inset-top));}.sheet-fields{grid-template-columns:minmax(0,1fr);gap:14px;width:100%;min-width:0}.sheet-fields label.full{grid-column:auto}.sheet-fields label{min-width:0}.sheet-fields input,.sheet-fields select,.sheet-fields textarea{min-height:46px;font-size:16px;padding:10px 8px;max-width:100%;min-width:0}.sheet-actions{position:sticky;bottom:-1px;background:#fff;padding-top:12px;padding-bottom:4px}.sheet-actions .btn{flex:1;min-height:46px}}
+
+
+.tag-select-row{display:flex;gap:6px;align-items:center}.tag-select-row select{flex:1;min-width:0}.add-tag-btn{padding:8px 11px;min-width:36px;line-height:1}
+.home-task-section{margin-top:12px}.home-task-section h3{font-size:12px;color:var(--muted);font-weight:700;margin:12px 0 4px}.home-task-section .taskrow{padding:9px 0}
+.tag-filter-bar{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 18px}
+.tag-filter-chip{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:7px 12px;font-size:12px;font-weight:650;cursor:pointer}
+.tag-filter-chip.active{background:var(--green);border-color:var(--green);color:#fff}
+.tag-filter-chip .count{opacity:.78;margin-left:4px;font-variant-numeric:tabular-nums}
+
+
+.month-task-pool{margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}
+.month-task-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px}
+.month-task-list .draggable{cursor:grab;touch-action:pan-y}
+.month-task-list .draggable:active{cursor:grabbing}
+.daycell.dragover{outline:2px dashed var(--accent);outline-offset:-3px;background:var(--soft)}
+
+.all-day-event{display:flex;align-items:center;gap:8px;margin:8px 0;padding:8px 10px;border-left:3px solid var(--green);border-radius:7px;font-size:12px}
+.all-day-event b{font-weight:650}.all-day-event small{color:var(--muted);margin-left:auto}
+.all-day-label{display:inline-block;font-size:10px;padding:2px 7px;border-radius:20px;background:#e8f0eb;color:#52745f;white-space:nowrap}
+.task-field input[type="checkbox"]{accent-color:var(--green)}
+#sheetEventStart:disabled,#sheetEventEnd:disabled,#eventStart:disabled,#eventEnd:disabled{background:#f1f3f0;color:#9aa49f}
+.all-day-toggle{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink)}
+.all-day-toggle input{width:auto;accent-color:var(--green)}
+
+/* Liflow account authentication */
+.auth-screen{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:22px;background:linear-gradient(135deg,#f7f8f5,#eaf1eb);overflow:auto}
+.auth-card{width:min(430px,100%);background:#fff;border:1px solid var(--line);border-radius:22px;padding:30px;box-shadow:0 18px 60px #26372b18}
+.auth-brand{font-size:30px;font-weight:800;letter-spacing:-1.5px;text-align:center;margin-bottom:4px}.auth-brand span{color:var(--green)}
+.auth-subtitle{text-align:center;color:var(--muted);font-size:12px;margin-bottom:25px}
+.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:5px;background:#f3f6f2;padding:4px;border-radius:11px;margin-bottom:20px}
+.auth-tabs button{padding:9px;border-radius:8px;background:transparent;color:var(--muted);font-weight:650}.auth-tabs button.active{background:#fff;color:#365e4a;box-shadow:0 1px 4px #26372b12}
+.auth-form{display:grid;gap:12px}.auth-form label{display:grid;gap:6px;font-size:12px;color:#66736e;font-weight:650}.auth-form input{width:100%;border:1px solid var(--line);border-radius:10px;padding:12px;background:#fbfcfa;color:var(--ink);outline:none}.auth-form input:focus{border-color:var(--green);box-shadow:0 0 0 3px #648b781a}
+.auth-submit{width:100%;padding:12px;border-radius:10px;background:var(--green);color:white;font-weight:700;margin-top:4px}.auth-submit:disabled{opacity:.55;cursor:wait}
+.auth-message{font-size:12px;line-height:1.6;padding:10px 12px;border-radius:9px;display:none}.auth-message.show{display:block}.auth-message.error{background:#fff0ed;color:#a44d3b}.auth-message.success{background:#edf5ef;color:#42634f}
+.auth-link{border:0;background:transparent;color:#52745f;text-decoration:underline;font-size:12px;padding:8px}.auth-config-note{font-size:11px;color:#9a7449;background:#faf4eb;padding:10px;border-radius:9px;margin-top:15px;line-height:1.6}
+.account-tools{display:flex;align-items:center;gap:9px}.account-email{font-size:11px;color:var(--muted);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sync-state{font-size:10px;color:var(--muted)}
+@media(max-width:520px){.auth-card{padding:24px 20px}.account-email{max-width:105px}.top{gap:8px;align-items:flex-start}.account-tools{flex-direction:column;align-items:flex-end;gap:3px}}
+
+
+/* iPhone-friendly task creation sheet */
+.task-sheet-fields .task-sheet-check{display:flex;align-items:center;gap:10px;min-height:46px;color:var(--ink);font-size:13px}
+.task-sheet-fields .task-sheet-check input{width:20px;height:20px;accent-color:var(--green)}
+@media(max-width:600px){
+  #openTaskSheet{min-height:42px;padding:9px 13px}
+  .nav{gap:0}
+  .nav button{flex:1}
+  .bottom-sheet{width:100%;border-radius:20px 20px 0 0}
+}
+
+
+/* Liflow 1.7: fixed monthly calendar cell dimensions on smartphones */
+@media (max-width: 600px) {
+  #monthGrid.monthgrid {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-auto-columns: minmax(0, 1fr);
+    grid-template-rows: 28px repeat(6, 76px);
+    grid-auto-rows: 76px;
+    align-content: start;
+    gap: 4px;
+  }
+  #monthGrid .weekday {
+    min-width: 0;
+    height: 28px;
+    box-sizing: border-box;
+    padding: 6px 0;
+  }
+  #monthGrid .daycell {
+    height: 76px;
+    min-height: 0;
+    max-height: 76px;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    padding: 4px;
+  }
+  #monthGrid .daycell > * { min-width: 0; max-width: 100%; }
+  #monthGrid .daycell .date { line-height: 16px; }
+  #monthGrid .daycell .calitem {
+    display: block;
+    max-width: 100%;
+    height: 14px;
+    line-height: 14px;
+    box-sizing: border-box;
+    margin-top: 3px;
+    padding: 0 3px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 8px;
+  }
+  #monthGrid .daycell small {
+    display: block;
+    line-height: 12px;
+    font-size: 8px;
+  }
+}
+
+
+.drag-time-preview{position:fixed;z-index:9999;pointer-events:none;display:none;padding:5px 8px;border-radius:7px;background:#26372b;color:#fff;font-size:10px;line-height:1.25;white-space:nowrap;box-shadow:0 2px 8px #0002;transform:none}
+
+
+.tag-color-backdrop{position:fixed;inset:0;z-index:120;background:#17231d66;display:none;place-items:center;padding:20px}
+.tag-color-backdrop.open{display:grid}
+.tag-color-dialog{width:min(390px,100%);background:#fff;border-radius:18px;padding:20px;box-shadow:0 18px 60px #17231d33}
+.tag-color-dialog h3{margin:0 0 6px;font-size:16px}.tag-color-dialog p{margin:0 0 15px;color:var(--muted);font-size:12px}
+.tag-color-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.tag-color-swatch{height:42px;border-radius:11px;border:2px solid #ffffff;box-shadow:0 0 0 1px #dce3dd;position:relative}
+.tag-color-swatch.selected{box-shadow:0 0 0 2px var(--green);border-color:#fff}
+.tag-color-swatch.selected:after{content:"✓";position:absolute;inset:0;display:grid;place-items:center;color:#34483b;font-weight:800;font-size:18px;text-shadow:0 1px 2px #fff}
+.tag-color-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+
+</style>
+</head>
+<body>
+
+<div id="authScreen" class="auth-screen">
+ <div class="auth-card">
+  <div class="auth-brand">Liflow<span>.</span></div>
+  <div class="auth-subtitle">STUDENT LIFE ORGANIZER</div>
+  <div class="auth-tabs"><button type="button" id="showLogin" class="active">ログイン</button><button type="button" id="showSignup">新規登録</button></div>
+  <div id="authMessage" class="auth-message" role="status" aria-live="polite"></div>
+  <form id="loginForm" class="auth-form">
+   <label>メールアドレス<input id="loginEmail" type="email" autocomplete="email" required placeholder="name@example.com"></label>
+   <label>パスワード<input id="loginPassword" type="password" autocomplete="current-password" required minlength="6" placeholder="パスワード"></label>
+   <button class="auth-submit" type="submit">ログイン</button>
+   <button class="auth-link" id="forgotPassword" type="button">パスワードを忘れた場合</button>
+  </form>
+  <form id="signupForm" class="auth-form" style="display:none">
+   <label>メールアドレス<input id="signupEmail" type="email" autocomplete="email" required placeholder="name@example.com"></label>
+   <label>パスワード（6文字以上）<input id="signupPassword" type="password" autocomplete="new-password" required minlength="6" placeholder="パスワードを設定"></label>
+   <label>パスワード（確認）<input id="signupPasswordConfirm" type="password" autocomplete="new-password" required minlength="6" placeholder="もう一度入力"></label>
+   <button class="auth-submit" type="submit">アカウントを作成</button>
+  </form>
+  <div class="auth-config-note">初回利用時は、SupabaseのURLと公開用Anon Keyの設定が必要です。設定方法は付属のセットアップ手順をご確認ください。</div>
+ </div>
+</div>
+
+<div class="app" id="liflowApp" style="display:none">
+<aside class="sidebar">
+<div class="brand">Liflow<span>.</span></div><div class="sub">STUDENT LIFE ORGANIZER</div>
+<nav class="nav">
+<button class="active" data-view="home"><i>⌂</i><span class="label">ホーム</span></button>
+<button data-view="day"><i>◷</i><span class="label">スケジュール</span></button>
+<button data-view="month"><i>▦</i><span class="label">マンスリー</span></button>
+<button data-view="tasks"><i>☑</i><span class="label">タスク</span></button>
+<button data-view="focus"><i>◉</i><span class="label">フォーカス</span></button>
+</nav>
+<div class="sidebar-note">小さな積み重ねが、<br>毎日の流れをつくる。</div>
+</aside>
+<main>
+<header class="top"><div><div class="eyebrow liflow-top-logo">Liflow<span>.</span></div><h1 id="pageTitle">今日も、いい一日に。</h1></div><div class="account-tools"><span class="account-email" id="accountEmail"></span><span class="sync-state" id="syncState"></span><button class="btn ghost small" id="logoutBtn" type="button">ログアウト</button><div class="datepill" id="todayLabel"></div></div></header>
+<section id="home" class="view show">
+<div class="stats">
+<div class="stat"><small>今日のタスク完了</small><strong id="homeDone">0/0</strong><em id="homePct">0% 完了</em></div>
+<div class="stat"><small>今日の予定</small><strong id="homeEvents">0</strong><em>スケジュール</em></div>
+<div class="stat"><small>今日の作業時間</small><strong id="homeStudy">0分</strong><em>記録済み</em></div>
+</div>
+<div class="grid">
+<div class="card"><div class="sectionhead"><h2>今日のタスク</h2><button class="btn light small" data-go="tasks">すべて見る →</button></div><div id="homeTasks"></div></div>
+<div class="card"><div class="sectionhead"><h2>今日のスケジュール</h2><button class="btn light small" data-go="day">開く →</button></div><div class="schedule-list" id="homeSchedule"></div></div>
+</div>
+</section>
+<section id="tasks" class="view">
+<div class="card">
+<div class="sectionhead"><h2>タスク一覧</h2><div style="display:flex;align-items:center;gap:10px"><span class="muted" id="taskCount"></span><button class="btn" id="openTaskSheet" type="button" aria-label="タスクを追加">＋ タスクを追加</button></div></div>
+<div id="taskList"></div>
+</div>
+</section>
+<section id="day" class="view">
+<div class="toolbar"><button class="btn light small" id="prevDay">← 前日</button><button class="btn light small" id="todayBtn">今日</button><button class="btn light small" id="nextDay">翌日 →</button><strong id="dayTitle"></strong><span class="muted">タスクは時間帯へドラッグして配置できます</span></div>
+<div class="card schedule-editor" style="display:none">
+  <div class="sectionhead"><h2>予定を追加</h2><span class="muted" style="font-size:11px">5分単位で設定できます</span></div>
+  <form id="eventForm" class="schedule-form">
+    <label class="wide">予定名<input id="eventTitle" type="text" placeholder="例：英語の勉強、部活動" required></label>
+    <label>日付<input id="eventDate" type="date" required></label>
+    <label class="all-day-toggle"><input id="eventAllDay" type="checkbox"> 終日の予定</label>
+    <label>開始時刻<input id="eventStart" type="time" step="300" value="09:00" required></label>
+    <label>終了時刻<input id="eventEnd" type="time" step="300" value="10:00" required></label>
+    <label>タグ<div class="tag-select-row"><select id="eventTag"><option>学校</option><option>勉強</option><option>部活</option><option>プライベート</option><option>その他</option></select><button type="button" class="btn light small add-tag-btn" id="addEventTag" title="タグを追加">＋</button><button type="button" class="btn light small add-tag-btn" id="deleteEventTag" title="選択中のタグを削除">−</button></div></label>
+    <label>繰り返し<select id="eventRepeat"><option value="none">繰り返さない</option><option value="daily">毎日</option><option value="weekly">毎週（同じ曜日）</option><option value="weekdays">平日（月〜金）</option></select></label>
+    <button class="btn" type="submit">予定を追加</button>
+  </form>
+  <div class="repeat-until"><span>繰り返し終了日（任意）：</span><input id="eventRepeatUntil" type="date"><span>空欄の場合は終了日なし</span></div>
+  <div class="tag-legend" aria-label="タグの色分け"><span class="tag-dot" style="background:#edf1fa;color:#60769a">学校</span><span class="tag-dot" style="background:#e8f2ec;color:#52755e">勉強</span><span class="tag-dot" style="background:#fff0e4;color:#a16d42">部活</span><span class="tag-dot" style="background:#f3edf7;color:#80618d">プライベート</span><span class="tag-dot" style="background:#eff1ef;color:#68756d">その他</span></div>
+  <p class="schedule-help">タイムラインの時間帯をクリックすると、開始時刻を入力欄に反映できます。タスクのドラッグ配置も5分単位で指定できます。</p>
+</div>
+<div class="day-layout"><div class="card task-pool"><h2>未配置のタスク</h2><div id="taskPool"></div></div><div class="timeline"><div class="timeline-head"><b>1日のタイムライン</b><span class="muted">05:00 — 24:00</span></div><div id="allDayEvents" style="padding:0 10px"></div><div id="timeSlots" class="timeline-body"></div></div></div>
+</section>
+<section id="month" class="view">
+<div class="card"><div class="toolbar"><button class="btn light small" id="prevMonth">←</button><strong id="monthTitle"></strong><button class="btn light small" id="nextMonth">→</button></div><div class="monthgrid" id="monthGrid"></div><div class="month-task-pool"><div class="sectionhead"><h3>タスクを日付に配置</h3><span class="muted">ドラッグ＆ドロップ</span></div><div id="monthTaskPool" class="month-task-list"></div></div></div>
+</section>
+<section id="focus" class="view">
+<div class="grid">
+<div class="card timerbox"><div class="eyebrow">FOCUS SESSION</div><h2 id="timerTask">フリー学習</h2><div class="timer" id="timerDisplay">00:00:00</div><div class="muted" id="timerState">集中する準備はできましたか？</div><div class="timer-controls" style="margin-top:20px"><button class="btn" id="timerStart">計測開始</button><button class="btn light" id="timerPause" disabled>一時停止</button><button class="btn ghost" id="timerStop" disabled>終了して記録</button></div><div style="margin-top:18px"><select class="field" id="timerSelect" style="max-width:260px"><option value="">フリー学習として記録</option></select></div></div>
+<div class="card"><h2>今日の計測履歴</h2><div id="sessionList"></div></div>
+</div>
+</section>
+</main>
+</div>
+
+<div class="sheet-backdrop" id="sheetBackdrop"></div>
+<section class="bottom-sheet" id="eventSheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+ <div class="sheet-grip"></div><div class="sheet-head"><h2 id="sheetTitle">新しい予定</h2><button class="sheet-close" id="sheetClose" aria-label="閉じる">×</button></div>
+ <form id="sheetForm"><div class="sheet-fields">
+  <label class="full">予定のタイトル<input id="sheetEventTitle" required maxlength="80" placeholder="例：数学の課題"></label>
+  <label>日付<input id="sheetEventDate" type="date" required></label>
+  <label class="all-day-toggle"><input id="sheetEventAllDay" type="checkbox"> 終日の予定</label>
+  <label>カテゴリー<div class="tag-select-row"><select id="sheetEventTag"><option>学校</option><option>勉強</option><option>部活</option><option>プライベート</option><option>その他</option></select><button type="button" class="btn light small add-tag-btn" id="addSheetEventTag" title="タグを追加">＋</button><button type="button" class="btn light small add-tag-btn" id="deleteSheetEventTag" title="選択中のタグを削除">−</button></div></label>
+  <label>開始時刻<input id="sheetEventStart" type="time" step="300" required></label>
+  <label>終了時刻<input id="sheetEventEnd" type="time" step="300" required></label>
+  <label>繰り返し<select id="sheetEventRepeat"><option value="none">繰り返さない</option><option value="daily">毎日</option><option value="weekly">毎週</option><option value="weekdays">平日</option></select></label>
+  <label>繰り返し終了日<input id="sheetEventRepeatUntil" type="date"></label>
+  <label class="full">メモ<textarea id="sheetEventNote" placeholder="予定の詳細（任意）"></textarea></label>
+ </div><div class="sheet-actions"><button type="button" class="btn ghost" id="sheetDelete" style="display:none;margin-right:auto">削除</button><button type="button" class="btn light" id="sheetCancel">キャンセル</button><button type="submit" class="btn" id="sheetSave">予定を作成</button></div></form>
+</section>
+<section class="bottom-sheet" id="taskSheet" role="dialog" aria-modal="true" aria-labelledby="taskSheetTitle">
+ <div class="sheet-grip"></div>
+ <div class="sheet-head"><h2 id="taskSheetTitle">新しいタスク</h2><button class="sheet-close" id="taskSheetClose" type="button" aria-label="閉じる">×</button></div>
+ <form id="taskForm">
+  <div class="sheet-fields task-sheet-fields">
+   <label class="full">タスク名<input id="taskTitle" required maxlength="100" placeholder="例：数学の課題を解く"></label>
+   <label>所要時間（分）<input id="taskMinutes" type="number" min="5" step="5" value="30" required></label>
+   <label>優先度<select id="taskPriority"><option>普通</option><option>高</option><option>低</option></select></label>
+   <label class="full">タグ<div class="tag-select-row"><select id="taskTag"><option>勉強</option><option>学校</option><option>部活</option><option>プライベート</option><option>その他</option></select><button type="button" class="btn light small add-tag-btn" id="addTaskTag" title="タグを追加">＋</button><button type="button" class="btn light small add-tag-btn" id="deleteTaskTag" title="選択中のタグを削除">−</button></div></label>
+   <label>実施予定日<input id="taskPlanDate" type="date"></label>
+   <label>締め切り<input id="taskDueDate" type="date"></label>
+   <label class="full task-sheet-check"><input id="taskAllDay" type="checkbox"> 終日タスクとして登録する</label>
+  </div>
+  <div class="sheet-actions"><button type="button" class="btn light" id="taskSheetCancel">キャンセル</button><button type="submit" class="btn">タスクを追加</button></div>
+ </form>
+</section>
+<section class="bottom-sheet" id="detailSheet" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+ <div class="sheet-grip"></div><div class="sheet-head"><h2 id="detailTitle">予定の詳細</h2><button class="sheet-close" id="detailClose" aria-label="閉じる">×</button></div>
+ <div class="detail-meta" id="detailMeta"></div><div class="detail-note" id="detailNote" style="display:none"></div>
+ <div class="sheet-actions"><button class="btn ghost" id="detailDelete" style="margin-right:auto">削除</button><button class="btn" id="detailEdit">編集する</button></div>
+</section>
+
+
+<div class="tag-color-backdrop" id="tagColorBackdrop" role="dialog" aria-modal="true" aria-labelledby="tagColorTitle">
+ <div class="tag-color-dialog"><h3 id="tagColorTitle">タグの色を選択</h3><p>色見本をタップして選んでください。</p><div class="tag-color-grid" id="tagColorGrid"></div><div class="tag-color-actions"><button type="button" class="btn light" id="tagColorCancel">キャンセル</button><button type="button" class="btn" id="tagColorConfirm">この色にする</button></div></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const today=new Date(); let selectedDate=new Date(today); let monthDate=new Date(today.getFullYear(),today.getMonth(),1);
+const TAG_STYLES={
+  "学校":{bg:"#edf1fa",text:"#60769a",border:"#8da0c2"},
+  "勉強":{bg:"#e8f2ec",text:"#52755e",border:"#80a18a"},
+  "部活":{bg:"#fff0e4",text:"#a16d42",border:"#d4a16d"},
+  "プライベート":{bg:"#f3edf7",text:"#80618d",border:"#a98bb4"},
+  "その他":{bg:"#eff1ef",text:"#68756d",border:"#9aa59e"}
+};
+let selectedTaskTag = "すべて";
+let taskTags=["勉強","学校","部活","プライベート","その他"];
+let scheduleTags=["学校","勉強","部活","プライベート","その他"];
+let customTagStyles={};
+const TAG_PALETTE=["#E8EEF9","#DCE8F8","#DCEFF2","#D9EFE8","#E3F0D8","#F1F0D5","#F8EFD8","#FBE6D8","#F8DFD9","#F6DFE8","#F0E1F2","#E9E1F7","#DCDFF3","#CFE5E8","#CFE8DD","#E8E8E8","#D9DEE2","#EADCCB","#F0E2C9","#DCE6D9"];
+let tasks=[];
+let events=[];
+let sessions=[]; let timer={running:false,start:0,elapsed:0,taskId:"",interval:null}; let eventSeq=10;
+const LEGACY_STORAGE_KEY="liflow-prototype-v02";
+const USER_STORAGE_PREFIX="liflow-user-v1-";
+let STORAGE_KEY=null;
+let currentUser=null, cloudReady=false, cloudSaveTimer=null, cloudSaveInProgress=false;
+function collectData(){return {
+  tasks, events, sessions, taskTags, scheduleTags, customTagStyles, selectedDate:key(selectedDate), monthDate:key(monthDate),
+  timer:{running:timer.running,start:timer.start,elapsed:timer.elapsed,taskId:timer.taskId}
+}}
+function saveData(){
+  if(!currentUser||!STORAGE_KEY)return;
+  const snapshot=collectData();
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot)); } catch(e) {}
+  if(!cloudReady||!window.liflowSupabase)return;
+  clearTimeout(cloudSaveTimer);
+  cloudSaveTimer=setTimeout(()=>saveCloudData(snapshot),900);
+}
+async function saveCloudData(snapshot=collectData()){
+  if(!currentUser||!cloudReady||!window.liflowSupabase)return;
+  cloudSaveInProgress=true;setSyncState('同期中…');
+  const {error}=await window.liflowSupabase.from('liflow_data').upsert({user_id:currentUser.id,data:snapshot,updated_at:new Date().toISOString()},{onConflict:'user_id'});
+  cloudSaveInProgress=false;
+  if(error){console.error('Liflow cloud save failed:',error);setSyncState('同期エラー');return false;}
+  setSyncState('同期済み');return true;
+}
+function loadData(rawOverride=null){
+  try {
+    const raw=rawOverride!==null?rawOverride:(STORAGE_KEY?localStorage.getItem(STORAGE_KEY):null); if(!raw)return;
+    const data=typeof raw==='string'?JSON.parse(raw):raw;
+    if(Array.isArray(data.tasks)) tasks=data.tasks.map(t=>({...t,tag:t.tag||"勉強",plannedDate:t.plannedDate||"",dueDate:t.dueDate||"",allDay:!!t.allDay}));
+    if(Array.isArray(data.events)) events=data.events.map(e=>({...e,tag:e.tag||(e.type==="school"?"学校":(e.taskId?((tasks.find(t=>String(t.id)===String(e.taskId))||{}).tag||"勉強"):"その他")),repeat:e.repeat||"none",allDay:!!e.allDay,skipDates:Array.isArray(e.skipDates)?e.skipDates:[]}));
+    // Remove only the exact built-in demo entries from older starter data; preserve user-created content.
+    const demoTasks=new Set(["数学の課題を進める","英単語を30個覚える","機械工作の予習","英語レポート"]);
+    tasks=tasks.filter(t=>!(Number(t.id)>=1&&Number(t.id)<=4&&demoTasks.has(t.title)));
+    const demoEvents=["09:00|10:30|数学","10:45|12:15|機械工作","13:00|14:30|英語"];
+    events=events.filter(e=>!(Number(e.id)>=1&&Number(e.id)<=3&&e.type==="school"&&demoEvents.includes(`${e.start}|${e.end}|${e.title}`)));
+    if(Array.isArray(data.sessions)) sessions=data.sessions;
+    if(Array.isArray(data.taskTags)) taskTags=[...new Set([...taskTags,...data.taskTags])];
+    if(Array.isArray(data.scheduleTags)) scheduleTags=[...new Set([...scheduleTags,...data.scheduleTags])];
+    if(data.customTagStyles&&typeof data.customTagStyles==="object") customTagStyles=data.customTagStyles;
+    if(data.selectedDate) selectedDate=new Date(data.selectedDate+"T12:00:00");
+    if(data.monthDate) monthDate=new Date(data.monthDate+"T12:00:00");
+    if(data.timer) timer={...timer,...data.timer,interval:null};
+    eventSeq=Math.max(10,...events.map(e=>Number(e.id)||0))+1;
+  } catch(e) {console.error('Liflow data load failed:',e)}
+}
+function resetDataForNewAccount(){
+  tasks=[];
+  events=[];
+  sessions=[];timer={running:false,start:0,elapsed:0,taskId:"",interval:null};eventSeq=10;taskTags=["勉強","学校","部活","プライベート","その他"];scheduleTags=["学校","勉強","部活","プライベート","その他"];customTagStyles={};selectedDate=new Date(today);monthDate=new Date(today.getFullYear(),today.getMonth(),1);
+}
+tasks=tasks.map(t=>({...t,tag:t.tag||"勉強",plannedDate:t.plannedDate||"",dueDate:t.dueDate||"",allDay:!!t.allDay}));
+events=events.map(ev=>({...ev,tag:ev.tag||(ev.type==="school"?"学校":"その他"),allDay:!!ev.allDay}));
+function key(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
+function fmtDate(d){return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`}
+function mins(s){let [h,m]=s.split(":").map(Number);return h*60+m}
+function hm(n){return `${String(Math.floor(n/60)).padStart(2,"0")}:${String(n%60).padStart(2,"0")}`}
+function duration(a,b){return mins(b)-mins(a)}
+function tagStyle(tag){if(customTagStyles[tag])return customTagStyles[tag];if(TAG_STYLES[tag])return TAG_STYLES[tag];const palette=[{bg:"#edf1fa",text:"#60769a",border:"#8da0c2"},{bg:"#e8f2ec",text:"#52755e",border:"#80a18a"},{bg:"#fff0e4",text:"#a16d42",border:"#d4a16d"},{bg:"#f3edf7",text:"#80618d",border:"#a98bb4"},{bg:"#eaf3f5",text:"#527c86",border:"#8db2ba"},{bg:"#f8edf0",text:"#9a6375",border:"#c99aaa"}];let i=[...String(tag||"")].reduce((a,c)=>a+c.charCodeAt(0),0)%palette.length;return palette[i]}
+function tagInline(tag){let c=tagStyle(tag);return `background:${c.bg};border-color:${c.border};color:${c.text}`}
+function shortDate(dateString){if(!dateString)return "";let [y,m,d]=dateString.split("-").map(Number);return `${m}/${d}`}
+function renderAll(){saveData();renderHome();renderTasks();renderDay();renderMonth();renderTimerOptions();renderSessions()}
+$("#todayLabel").textContent=fmtDate(today);
+function switchView(name){$$(".view").forEach(v=>v.classList.toggle("show",v.id===name));$$(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.view===name));$("#pageTitle").textContent=({home:"今日も、いい一日に。",tasks:"タスクを整理する。",day:"時間を、デザインする。",month:"先の予定まで見渡す。",focus:"目の前のことに、集中する。"})[name];if(name==="day")renderDay()}
+$$(".nav button").forEach(b=>b.onclick=()=>switchView(b.dataset.view));$$("[data-go]").forEach(b=>b.onclick=()=>switchView(b.dataset.go));
+function renderHome(){let done=tasks.filter(t=>t.done).length;$("#homeDone").textContent=`${done}/${tasks.length}`;$("#homePct").textContent=`${tasks.length?Math.round(done/tasks.length*100):0}% 完了`;$("#homeEvents").textContent=getEventsForDate(key(today)).length;let sec=sessions.filter(s=>s.date===key(today)).reduce((a,s)=>a+s.seconds,0);$("#homeStudy").textContent=`${Math.floor(sec/60)}分`;
+const todayKey=key(today);
+const plannedToday=tasks.filter(t=>t.plannedDate===todayKey);
+const dueToday=tasks.filter(t=>t.dueDate===todayKey&&!t.done&&!plannedToday.some(p=>String(p.id)===String(t.id)));
+const taskRows=items=>items.map(t=>`<div class="taskrow"><input type="checkbox" data-check="${t.id}" ${t.done?"checked":""}><div class="taskname ${t.done?"done":""}">${esc(t.title)}<div class="task-meta">${t.plannedDate?`実施予定 ${shortDate(t.plannedDate)}${t.allDay?"（終日）":""}`:""}${t.dueDate?`締切 ${shortDate(t.dueDate)}`:""}</div></div><span class="tag-dot" style="${tagInline(t.tag)}">${esc(t.tag||"その他")}</span>${t.done?'<span class="tag">完了</span>':''}</div>`).join("");
+$("#homeTasks").innerHTML=`<div class="home-task-section"><h3>実施予定のタスク · ${plannedToday.length}件</h3>${taskRows(plannedToday)||'<div class="empty">今日が実施予定日のタスクはありません</div>'}</div><div class="home-task-section"><h3>〆切のタスク · ${dueToday.length}件</h3>${taskRows(dueToday)||'<div class="empty">今日が〆切の未完了タスクはありません</div>'}</div>`;
+$("#homeSchedule").innerHTML=getEventsForDate(key(today)).sort((a,b)=>a.start.localeCompare(b.start)).map(e=>`<div class="event"><div class="eventtime">${e.start}</div><div class="eventbody" style="${tagInline(e.tag)}"><b>${esc(e.title)}${e.isRecurring?'<span class="repeat-chip">繰り返し</span>':''}</b><small>${e.start} – ${e.end} · ${esc(e.tag||"その他")}</small></div></div>`).join("")||'<div class="empty">予定はありません</div>';
+$$("[data-check]").forEach(c=>c.onchange=()=>{let t=tasks.find(x=>x.id==c.dataset.check);if(t)t.done=c.checked;renderAll()})}
+function actualSecondsForTask(task){return sessions.reduce((sum,s)=>sum+((s.taskId!=null&&String(s.taskId)===String(task.id))||(s.taskId==null&&s.title===task.title)?Number(s.seconds)||0:0),0)}
+function formatElapsed(total){let sec=Math.max(0,Math.floor(Number(total)||0)),h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=sec%60;return h>0?`${h}時間${String(m).padStart(2,"0")}分${String(s).padStart(2,"0")}秒`:`${m}分${String(s).padStart(2,"0")}秒`}
+function renderTasks(){
+  const allTags=[...new Set([...taskTags,...tasks.map(t=>t.tag||"その他")])];
+  const tags=["すべて",...allTags];
+  if(selectedTaskTag!=="すべて"&&!allTags.includes(selectedTaskTag)) selectedTaskTag="すべて";
+  const visibleTasks=selectedTaskTag==="すべて"?tasks:tasks.filter(t=>(t.tag||"その他")===selectedTaskTag);
+  const activeTasks=visibleTasks.filter(t=>!t.done);
+  const completedTasks=visibleTasks.filter(t=>t.done);
+  $("#taskCount").textContent=`${activeTasks.length}件 未完了 · ${completedTasks.length}件 完了`;
+  const tagCounts=Object.fromEntries(tags.map(tag=>[tag,tag==="すべて"?tasks.length:tasks.filter(t=>(t.tag||"その他")===tag).length]));
+  const renderTaskRows=(items)=>items.map(t=>{
+    let actual=actualSecondsForTask(t),planned=t.minutes*60,pct=planned?Math.min(100,actual/planned*100):0;
+    let delta=actual===0?'<span class="comparison-delta none">まだ計測なし</span>':actual>planned?`<span class="comparison-delta over">予定より ${formatElapsed(actual-planned)} 長い</span>`:actual<planned?`<span class="comparison-delta under">予定より ${formatElapsed(planned-actual)} 短い</span>`:'<span class="comparison-delta under">予定どおり</span>';
+    let overdue=t.dueDate&&t.dueDate<key(today)&&!t.done;
+    let meta=`<span class="tag-dot" style="${tagInline(t.tag)}">${esc(t.tag||"その他")}</span>${t.plannedDate?`<span>実施予定：${shortDate(t.plannedDate)}${t.allDay?"（終日）":""}</span>`:""}${t.dueDate?`<span class="${overdue?"late":""}">締め切り：${shortDate(t.dueDate)}${overdue?"（期限超過）":""}</span>`:""}`;
+    return `<div class="taskrow"><input type="checkbox" data-taskcheck="${t.id}" ${t.done?"checked":""}><div class="taskname ${t.done?"done":""}">${esc(t.title)}<div class="muted" style="font-size:11px">${t.priority}優先</div><div class="task-meta">${meta}</div><div class="task-comparison"><div class="comparison-values"><span>予定 <b>${t.minutes}分</b></span><span>実績 <b>${actual?formatElapsed(actual):"0分00秒"}</b></span>${delta}</div><div class="progress compare-progress"><span style="width:${pct}%"></span></div></div></div>${t.done?'<span class="tag">完了</span>':`<button class="btn light small" data-focus="${t.id}">計測</button>`}<button class="btn ghost small" data-delete="${t.id}">削除</button></div>`
+  }).join("");
+  const activeHtml=renderTaskRows(activeTasks);
+  const completedHtml=renderTaskRows(completedTasks);
+  $("#taskList").innerHTML=`
+    <div class="tag-filter-bar" aria-label="タグでタスクを絞り込む">
+      ${tags.map(tag=>`<button type="button" class="tag-filter-chip ${selectedTaskTag===tag?"active":""}" data-tasktag="${esc(tag)}" aria-pressed="${selectedTaskTag===tag}">${esc(tag)}<span class="count">${tagCounts[tag]}</span></button>`).join("")}
+    </div>
+    <div class="muted" style="font-size:12px;margin:-7px 0 12px">${selectedTaskTag==="すべて"?"すべてのタグを表示中":`「${esc(selectedTaskTag)}」タグのタスクを表示中`}</div>
+    <section class="task-group">
+      <div class="sectionhead" style="margin:18px 0 6px"><h3>未完了のタスク</h3><span class="muted">${activeTasks.length}件</span></div>
+      ${activeHtml||'<div class="empty">該当する未完了タスクはありません</div>'}
+    </section>
+    <details class="task-group completed-group" style="margin-top:22px" ${completedTasks.length?"":"open"}>
+      <summary style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:13px 2px;border-top:1px solid var(--line);font-weight:650;list-style:none">
+        <span>終了したタスク</span><span class="muted">${completedTasks.length}件　⌄</span>
+      </summary>
+      <div style="padding-top:5px">${completedHtml||'<div class="empty">該当する終了タスクはありません</div>'}</div>
+    </details>`;
+  $$("[data-tasktag]").forEach(b=>b.onclick=()=>{selectedTaskTag=b.dataset.tasktag;renderTasks()});
+  $$("[data-taskcheck]").forEach(c=>c.onchange=()=>{tasks.find(t=>t.id==c.dataset.taskcheck).done=c.checked;renderAll()});
+  $$("[data-delete]").forEach(b=>b.onclick=()=>{tasks=tasks.filter(t=>t.id!=b.dataset.delete);renderAll()});
+  $$("[data-focus]").forEach(b=>b.onclick=()=>{switchView("focus");$("#timerSelect").value=b.dataset.focus;$("#timerTask").textContent=tasks.find(t=>t.id==b.dataset.focus)?.title||"学習";});
+}
+function refreshTagSelects(){
+  const fill=(selector,tags,preferred)=>{const el=$(selector);if(!el)return;const current=el.value;el.innerHTML=tags.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join("");el.value=tags.includes(current)?current:(tags.includes(preferred)?preferred:tags[0]);};
+  fill("#taskTag",taskTags,"勉強");fill("#eventTag",scheduleTags,"学校");fill("#sheetEventTag",scheduleTags,"その他");
+}
+let pendingTagKind=null,pendingTagName="",pendingTagColor=TAG_PALETTE[0];
+function openTagColorPicker(kind,tag){
+  pendingTagKind=kind;pendingTagName=tag;pendingTagColor=TAG_PALETTE[0];
+  const grid=$("#tagColorGrid");grid.innerHTML=TAG_PALETTE.map((color,i)=>`<button type="button" class="tag-color-swatch ${i===0?"selected":""}" style="background:${color}" data-tag-color="${color}" aria-label="色 ${i+1}" aria-pressed="${i===0}"></button>`).join("");
+  grid.querySelectorAll("[data-tag-color]").forEach(btn=>btn.onclick=()=>{pendingTagColor=btn.dataset.tagColor;grid.querySelectorAll("[data-tag-color]").forEach(b=>{let on=b===btn;b.classList.toggle("selected",on);b.setAttribute("aria-pressed",String(on))})});
+  $("#tagColorBackdrop").classList.add("open");
+}
+function closeTagColorPicker(){$("#tagColorBackdrop").classList.remove("open");pendingTagKind=null;pendingTagName="";}
+function createTag(kind){
+  const name=prompt(kind==="task"?"新しいタスクタグの名前を入力してください":"新しいスケジュールタグの名前を入力してください");if(name===null)return;
+  const tag=name.trim();if(!tag){alert("タグ名を入力してください。");return}if(tag.length>20){alert("タグ名は20文字以内にしてください。");return}
+  const list=kind==="task"?taskTags:scheduleTags;if(list.includes(tag)){alert("そのタグはすでにあります。");return}
+  openTagColorPicker(kind,tag);
+}
+$("#tagColorCancel").onclick=closeTagColorPicker;
+$("#tagColorBackdrop").addEventListener("click",e=>{if(e.target.id==="tagColorBackdrop")closeTagColorPicker()});
+$("#tagColorConfirm").onclick=()=>{
+  if(!pendingTagKind||!pendingTagName)return;
+  const kind=pendingTagKind,tag=pendingTagName,bg=pendingTagColor;
+  customTagStyles[tag]={bg,text:"#43534A",border:bg};
+  (kind==="task"?taskTags:scheduleTags).push(tag);refreshTagSelects();
+  if(kind==="task")$("#taskTag").value=tag;else{$("#eventTag").value=tag;$("#sheetEventTag").value=tag;}
+  closeTagColorPicker();renderAll();
+};
+function deleteTag(kind,selector){
+  const tag=$(selector)?.value;if(!tag)return;const list=kind==="task"?taskTags:scheduleTags;
+  if(["その他"].includes(tag)){alert("「その他」タグは削除できません。");return}
+  if(!confirm(`「${tag}」タグを削除しますか？\nこのタグが付いた項目は「その他」に変更されます。`))return;
+  if(kind==="task"){tasks.forEach(t=>{if(t.tag===tag)t.tag="その他"});taskTags=taskTags.filter(x=>x!==tag);if(selectedTaskTag===tag)selectedTaskTag="すべて";}
+  else{events.forEach(ev=>{if(ev.tag===tag)ev.tag="その他"});scheduleTags=scheduleTags.filter(x=>x!==tag);}
+  delete customTagStyles[tag];refreshTagSelects();renderAll();
+}
+$("#addTaskTag").onclick=()=>createTag("task");
+$("#addEventTag").onclick=()=>createTag("schedule");
+$("#addSheetEventTag").onclick=()=>createTag("schedule");
+$("#deleteTaskTag").onclick=()=>deleteTag("task","#taskTag");
+$("#deleteEventTag").onclick=()=>deleteTag("schedule","#eventTag");
+$("#deleteSheetEventTag").onclick=()=>deleteTag("schedule","#sheetEventTag");
+refreshTagSelects();
+
+$("#openTaskSheet").onclick=()=>{
+  $("#taskTitle").value="";$("#taskMinutes").value=30;$("#taskPlanDate").value="";$("#taskDueDate").value="";$("#taskAllDay").checked=false;$("#taskPriority").value="普通";
+  backdrop.classList.add("open");taskSheet.classList.add("open");
+  setTimeout(()=>$("#taskTitle").focus(),180);
+};
+$("#taskSheetClose").onclick=$("#taskSheetCancel").onclick=closeSheets;
+$("#taskForm").onsubmit=e=>{
+  e.preventDefault();
+  let title=$("#taskTitle").value.trim();if(!title)return;
+  let rawMinutes=Number($("#taskMinutes").value)||30;
+  let plannedDate=$("#taskPlanDate").value,dueDate=$("#taskDueDate").value,allDay=$("#taskAllDay").checked;
+  if(allDay&&!plannedDate){alert("終日タスクには実施予定日を設定してください。");$("#taskPlanDate").focus();return}
+  if(plannedDate&&dueDate&&dueDate<plannedDate){alert("締め切りは実施予定日以降の日付にしてください。");return}
+  tasks.push({id:Date.now(),title,minutes:Math.max(5,Math.round(rawMinutes/5)*5),priority:$("#taskPriority").value,tag:$("#taskTag").value,plannedDate,dueDate,allDay,done:false});
+  closeSheets();renderAll();
+};
+$("#eventAllDay").onchange=()=>{const disabled=$("#eventAllDay").checked;$("#eventStart").disabled=disabled;$("#eventEnd").disabled=disabled;};
+$("#eventForm").onsubmit=e=>{
+  e.preventDefault();
+  let title=$("#eventTitle").value.trim(),date=$("#eventDate").value,allDay=$("#eventAllDay").checked;
+  let start=allDay?"":$("#eventStart").value,end=allDay?"":$("#eventEnd").value;
+  let repeat=$("#eventRepeat").value,repeatUntil=$("#eventRepeatUntil").value,tag=$("#eventTag").value;
+  if(!title||!date||(!allDay&&(!start||!end)))return;
+  if(!allDay&&mins(end)<=mins(start)){alert("終了時刻は開始時刻より後にしてください。");return}
+  if(repeatUntil&&repeatUntil<date){alert("繰り返し終了日は予定日以降にしてください。");return}
+  events.push({id:eventSeq++,title,date,start,end,allDay,type:"custom",tag,repeat,repeatUntil:repeat==="none"?"":repeatUntil,skipDates:[]});
+  selectedDate=new Date(date+"T12:00:00");monthDate=new Date(selectedDate.getFullYear(),selectedDate.getMonth(),1);
+  $("#eventTitle").value="";$("#eventRepeat").value="none";$("#eventRepeatUntil").value="";$("#eventAllDay").checked=false;$("#eventStart").disabled=false;$("#eventEnd").disabled=false;renderAll();
+};
+function dateOrdinal(dateString){let [y,m,d]=dateString.split("-").map(Number);return Math.floor(Date.UTC(y,m-1,d)/86400000)}
+function eventOccursOn(event,dateString){if((event.skipDates||[]).includes(dateString))return false;if(!event.repeat||event.repeat==="none")return event.date===dateString;if(dateString<event.date||(event.repeatUntil&&dateString>event.repeatUntil))return false;let diff=dateOrdinal(dateString)-dateOrdinal(event.date);if(event.repeat==="daily")return diff>=0;if(event.repeat==="weekly")return diff>=0&&diff%7===0;if(event.repeat==="weekdays"){let day=new Date(dateString+"T12:00:00").getDay();return diff>=0&&day>=1&&day<=5}return false}
+function getEventsForDate(dateString){return events.filter(e=>eventOccursOn(e,dateString)).map(e=>({...e,sourceId:e.id,isRecurring:!!(e.repeat&&e.repeat!=="none")}))}
+function renderDay(){
+  const d=key(selectedDate),dayStart=5*60,dayEnd=24*60;
+  $("#dayTitle").textContent=fmtDate(selectedDate);$("#eventDate").value=d;
+  let placed=getEventsForDate(d);
+  $("#taskPool").innerHTML=tasks.filter(t=>!t.done&&!placed.some(e=>e.taskId===t.id)).map(t=>`<div class="draggable" draggable="true" data-drag="${t.id}"><b>${esc(t.title)}</b><small>${t.minutes}分 · ${t.priority}優先 · ${esc(t.tag||"その他")}${t.plannedDate?` · 予定 ${shortDate(t.plannedDate)}${t.allDay?"（終日）":""}`:""}${t.dueDate?` · 締切 ${shortDate(t.dueDate)}`:""}</small></div>`).join("")||'<div class="empty">未配置のタスクはありません</div>';
+  $$ ("[data-drag]").forEach(el=>{el.ondragstart=e=>e.dataTransfer.setData("text/plain",el.dataset.drag)});
+
+  let hourLines="";
+  for(let h=5;h<24;h++)hourLines+=`<div class="hour-line"><time>${String(h).padStart(2,"0")}:00</time><div></div></div>`;
+
+  // Events are laid out in overlap groups, with their height proportional to duration.
+  let allDayEvents=placed.filter(e=>e.allDay);let allDayTasks=getTaskAllDayEntries(d);$('#allDayEvents').innerHTML=[...allDayEvents.map(ev=>`<div class="all-day-event" data-event-card="${ev.sourceId}" data-event-date="${d}" style="${tagInline(ev.tag)}"><b>${esc(ev.title)}</b><span class="all-day-label">終日</span><small>${esc(ev.tag||'その他')}</small></div>`),...allDayTasks.map(t=>`<div class="all-day-event" style="${tagInline(t.tag)}"><b>${esc(t.title)}</b><span class="all-day-label">終日タスク · ${t._calendarLabel}</span><small>${esc(t.tag||'その他')}</small></div>`)].join('')||'<div class="muted" style="font-size:11px;padding:7px 0">終日の予定はありません</div>';let visible=placed.filter(e=>!e.allDay).map(e=>({...e,_s:Math.max(dayStart,mins(e.start)),_e:Math.min(dayEnd,mins(e.end))})).filter(e=>e._e>e._s).sort((a,b)=>a._s-b._s||a._e-b._e);
+  let groups=[];
+  for(const ev of visible){let g=groups[groups.length-1];if(!g||ev._s>=g.end){g={items:[],end:ev._e};groups.push(g)}g.items.push(ev);g.end=Math.max(g.end,ev._e)}
+  for(const g of groups){let laneEnds=[];for(const ev of g.items){let lane=laneEnds.findIndex(end=>end<=ev._s);if(lane<0)lane=laneEnds.length;laneEnds[lane]=ev._e;ev._lane=lane}for(const ev of g.items)ev._lanes=laneEnds.length}
+  let eventHtml=visible.map(ev=>{
+    let top=ev._s-dayStart,height=ev._e-ev._s,laneWidth=100/ev._lanes,left=laneWidth*ev._lane;
+    let c=tagStyle(ev.tag),cls=height<18?"short":height<34?"medium":"";
+    let repeat=ev.isRecurring?"（繰り返し）":"";
+    let label=height<18?"":`<span class="event-title">${esc(ev.title)}${repeat}</span>${height>=34?`<span class="event-time">${ev.start}–${ev.end} · ${esc(ev.tag||"その他")}</span>`:""}`;
+    return `<div class="placed ${cls}" title="${esc(ev.title)} ${ev.start}–${ev.end} / ${esc(ev.tag||"その他")}" data-event-card="${ev.sourceId}" style="top:${top}px;height:${height}px;left:calc(${left}% + 2px);width:calc(${laneWidth}% - 4px);background:${c.bg};border-color:${c.border};color:${c.text}">${label}<button data-removeevent="${ev.sourceId}" data-eventdate="${d}" title="この日の予定を削除">×</button></div>`;
+  }).join("");
+  $("#timeSlots").innerHTML=`<div class="hour-grid">${hourLines}</div><div class="event-layer" id="eventLayer">${eventHtml}</div>`;
+  const layer=$("#eventLayer");
+  layer.ondragover=e=>{e.preventDefault();layer.classList.add("dragover")};
+  layer.ondragleave=e=>{if(!layer.contains(e.relatedTarget))layer.classList.remove("dragover")};
+  layer.ondrop=e=>{
+    e.preventDefault();layer.classList.remove("dragover");
+    let id=Number(e.dataTransfer.getData("text/plain")),t=tasks.find(x=>x.id===id);if(!t)return;
+    let rect=layer.getBoundingClientRect(),raw=dayStart+(e.clientY-rect.top),start=Math.max(dayStart,Math.round(raw/5)*5),end=start+t.minutes;
+    if(end>dayEnd){alert("この時間には配置できません。");return}
+    events.push({id:eventSeq++,taskId:t.id,title:t.title,start:hm(start),end:hm(end),type:"task",tag:t.tag||"勉強",date:d,repeat:"none"});renderAll();
+  };
+  layer.onclick=e=>{
+    if(e.target.closest(".placed"))return;
+    let rect=layer.getBoundingClientRect(),raw=dayStart+(e.clientY-rect.top),start=Math.max(dayStart,Math.min(dayEnd-5,Math.round(raw/5)*5));
+    $("#eventStart").value=hm(start);$("#eventEnd").value=hm(Math.min(start+60,dayEnd));$("#eventTag").value="その他";$("#eventTitle").focus();
+  };
+  $$ ("[data-removeevent]").forEach(b=>b.onclick=e=>{
+    e.stopPropagation();let source=events.find(ev=>ev.id==b.dataset.removeevent);if(!source)return;
+    let date=b.dataset.eventdate;
+    if(source.repeat&&source.repeat!=="none"){source.skipDates=source.skipDates||[];if(!source.skipDates.includes(date))source.skipDates.push(date)}
+    else{events=events.filter(ev=>ev.id!=source.id)}
+    renderAll();
+  });
+}
+$("#prevDay").onclick=()=>{selectedDate.setDate(selectedDate.getDate()-1);saveData();renderDay()};$("#nextDay").onclick=()=>{selectedDate.setDate(selectedDate.getDate()+1);saveData();renderDay()};$("#todayBtn").onclick=()=>{selectedDate=new Date(today);saveData();renderDay()};
+function renderMonth(){let y=monthDate.getFullYear(),m=monthDate.getMonth();$("#monthTitle").textContent=`${y}年 ${m+1}月`;let first=new Date(y,m,1),offset=first.getDay(),days=new Date(y,m+1,0).getDate();let html=["日","月","火","水","木","金","土"].map(x=>`<div class="weekday">${x}</div>`).join("");for(let i=0;i<offset;i++)html+='<div></div>';for(let n=1;n<=days;n++){let d=new Date(y,m,n),k=key(d),items=getEventsForDate(k).sort((a,b)=>(a.allDay?0:1)-(b.allDay?0:1)||(a.start||'').localeCompare(b.start||''));html+=`<div class="daycell ${k===key(today)?"today":""}" data-date="${k}"><div class="date">${n}</div>${items.slice(0,2).map(e=>`<span class="calitem" style="${tagInline(e.tag)}">${e.allDay?"終日":esc(e.start)} ${esc(e.title)}${e.isRecurring?" ↻":""}</span>`).join("")}${tasks.filter(t=>t.allDay&&t.plannedDate===k&&!items.some(e=>String(e.taskId)===String(t.id))).slice(0,Math.max(0,2-items.length)).map(t=>`<span class="calitem" style="${tagInline(t.tag)}">終日 ${esc(t.title)}</span>`).join("")}${items.length>2?`<small>+${items.length-2}</small>`:""}</div>`}$("#monthGrid").innerHTML=html;$$("[data-date]").forEach(c=>c.onclick=()=>{selectedDate=new Date(c.dataset.date+"T12:00:00");switchView("day")})}
+$("#prevMonth").onclick=()=>{monthDate.setMonth(monthDate.getMonth()-1);saveData();renderMonth()};$("#nextMonth").onclick=()=>{monthDate.setMonth(monthDate.getMonth()+1);saveData();renderMonth()};
+function renderTimerOptions(){let val=$("#timerSelect").value;$("#timerSelect").innerHTML='<option value="">フリー学習として記録</option>'+tasks.map(t=>`<option value="${t.id}">${esc(t.title)}</option>`).join("");$("#timerSelect").value=val}
+function displayTimer(){let sec=timer.elapsed+(timer.running?Math.floor((Date.now()-timer.start)/1000):0);$("#timerDisplay").textContent=`${String(Math.floor(sec/3600)).padStart(2,"0")}:${String(Math.floor(sec%3600/60)).padStart(2,"0")}:${String(sec%60).padStart(2,"0")}`}
+$("#timerSelect").onchange=()=>{if(timer.running||timer.elapsed>0)return;timer.taskId=$("#timerSelect").value;let t=tasks.find(t=>t.id==timer.taskId);$("#timerTask").textContent=t?t.title:"フリー学習";saveData()};
+function syncTimerControls(){
+  $("#timerStart").disabled=timer.running;
+  $("#timerStart").textContent=timer.elapsed>0?"計測を再開":"計測開始";
+  $("#timerPause").disabled=!timer.running;
+  $("#timerStop").disabled=timer.elapsed===0&&!timer.running;
+  $("#timerState").textContent=timer.running?"集中しています":timer.elapsed>0?"一時停止中":"集中する準備はできましたか？";
+}
+function startTimer(){
+  if(timer.running)return;
+  if(!timer.taskId)timer.taskId=$("#timerSelect").value;
+  timer.start=Date.now();timer.running=true;
+  timer.interval=setInterval(()=>{displayTimer();saveData()},500);
+  syncTimerControls();saveData();
+}
+function pauseTimer(){
+  if(!timer.running)return;
+  timer.elapsed+=Math.floor((Date.now()-timer.start)/1000);
+  timer.running=false;clearInterval(timer.interval);timer.interval=null;
+  displayTimer();syncTimerControls();saveData();
+}
+function finishTimer(){
+  if(timer.running){timer.elapsed+=Math.floor((Date.now()-timer.start)/1000);timer.running=false;clearInterval(timer.interval);timer.interval=null;}
+  if(timer.elapsed<=0)return;
+  let t=tasks.find(t=>t.id==timer.taskId);
+  sessions.unshift({date:key(today),taskId:timer.taskId||null,title:t?t.title:"フリー学習",seconds:timer.elapsed});
+  timer.elapsed=0;timer.start=0;timer.taskId="";
+  $("#timerSelect").value="";$("#timerTask").textContent="フリー学習";
+  displayTimer();syncTimerControls();renderAll();
+}
+$("#timerStart").onclick=startTimer;
+$("#timerPause").onclick=pauseTimer;
+$("#timerStop").onclick=finishTimer;
+function renderSessions(){$("#sessionList").innerHTML=sessions.map(s=>`<div class="taskrow"><div class="taskname">${esc(s.title)}<div class="muted" style="font-size:11px">${s.date}</div></div><b style="white-space:nowrap;font-variant-numeric:tabular-nums">${formatElapsed(s.seconds)}</b></div>`).join("")||'<div class="empty">計測履歴はまだありません</div>'}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+
+// 0.5: long-press creation, event detail/edit/delete, and drag-to-reschedule.
+let sheetEditingId=null, sheetEditingOccurrence=null, detailEventId=null, detailOccurrence=null, pressTimer=null, pressOrigin=null, longPressFired=false;
+const backdrop=$('#sheetBackdrop'), eventSheet=$('#eventSheet'), detailSheet=$('#detailSheet');
+const taskSheet=$('#taskSheet');
+function closeSheets(){backdrop.classList.remove('open');eventSheet.classList.remove('open');taskSheet.classList.remove('open');detailSheet.classList.remove('open');sheetEditingId=null;sheetEditingOccurrence=null}
+function openSheet(date,start='09:00',end='10:00',ev=null,occurrence=null){
+ closeSheets();sheetEditingId=ev?ev.id:null;sheetEditingOccurrence=occurrence;
+ $('#sheetTitle').textContent=ev?'予定を編集':'新しい予定';$('#sheetSave').textContent=ev?'変更を保存':'予定を作成';$('#sheetDelete').style.display=ev?'':'none';
+ $('#sheetEventTitle').value=ev?.title||'';$('#sheetEventDate').value=occurrence||ev?.date||date;$('#sheetEventTag').value=ev?.tag||'その他';$('#sheetEventAllDay').checked=!!ev?.allDay;$('#sheetEventStart').value=ev?.start||start;$('#sheetEventEnd').value=ev?.end||end;$('#sheetEventStart').disabled=$('#sheetEventAllDay').checked;$('#sheetEventEnd').disabled=$('#sheetEventAllDay').checked;$('#sheetEventStart').required=!$('#sheetEventAllDay').checked;$('#sheetEventEnd').required=!$('#sheetEventAllDay').checked;$('#sheetEventRepeat').value=ev?.repeat||'none';$('#sheetEventRepeatUntil').value=ev?.repeatUntil||'';$('#sheetEventNote').value=ev?.note||'';
+ backdrop.classList.add('open');eventSheet.classList.add('open');setTimeout(()=>$('#sheetEventTitle').focus(),180);
+}
+function eventById(id){return events.find(x=>String(x.id)===String(id))}
+function showEventDetail(id,occurrence){let ev=eventById(id);if(!ev)return;detailEventId=id;detailOccurrence=occurrence||ev.date;$('#detailTitle').textContent=ev.title;$('#detailMeta').innerHTML=`<span>${detailOccurrence}</span><span>${ev.allDay?'終日':`${ev.start} – ${ev.end}`}</span><span class="tag-dot" style="${tagInline(ev.tag||'その他')}">${esc(ev.tag||'その他')}</span>${ev.repeat&&ev.repeat!=='none'?'<span>繰り返し</span>':''}`;$('#detailNote').textContent=ev.note||'';$('#detailNote').style.display=ev.note?'':'none';backdrop.classList.add('open');detailSheet.classList.add('open')}
+function removeEventOccurrence(id,date){let ev=eventById(id);if(!ev)return;if(ev.repeat&&ev.repeat!=='none'){ev.skipDates=ev.skipDates||[];if(!ev.skipDates.includes(date))ev.skipDates.push(date)}else{events=events.filter(x=>x.id!==ev.id)}closeSheets();renderAll()}
+$('#sheetClose').onclick=$('#sheetCancel').onclick=()=>closeSheets();$('#detailClose').onclick=closeSheets;backdrop.onclick=closeSheets;$('#sheetEventAllDay').onchange=()=>{let disabled=$('#sheetEventAllDay').checked;$('#sheetEventStart').disabled=disabled;$('#sheetEventEnd').disabled=disabled;$('#sheetEventStart').required=!disabled;$('#sheetEventEnd').required=!disabled};
+$('#sheetForm').onsubmit=e=>{e.preventDefault();let title=$('#sheetEventTitle').value.trim(),date=$('#sheetEventDate').value,allDay=$('#sheetEventAllDay').checked,start=allDay?'':$('#sheetEventStart').value,end=allDay?'':$('#sheetEventEnd').value;if(!title||!date||(!allDay&&(!start||!end)))return;if(!allDay&&mins(end)<=mins(start)){alert('終了時刻は開始時刻より後に設定してください。');return}let repeat=$('#sheetEventRepeat').value,repeatUntil=$('#sheetEventRepeatUntil').value;if(repeatUntil&&repeatUntil<date){alert('繰り返し終了日は予定日以降にしてください。');return}let data={title,date,start,end,allDay,tag:$('#sheetEventTag').value,repeat,repeatUntil:repeat==='none'?'':repeatUntil,note:$('#sheetEventNote').value,skipDates:[]};if(sheetEditingId!==null){let old=eventById(sheetEditingId);if(old){if(sheetEditingOccurrence&&old.repeat&&old.repeat!=='none'&&sheetEditingOccurrence!==old.date){old.skipDates=old.skipDates||[];if(!old.skipDates.includes(sheetEditingOccurrence))old.skipDates.push(sheetEditingOccurrence);events.push({...data,id:eventSeq++,repeat:'none',repeatUntil:'',skipDates:[]})}else Object.assign(old,data)}}else events.push({...data,id:eventSeq++,type:'custom'});selectedDate=new Date(date+'T12:00:00');monthDate=new Date(selectedDate.getFullYear(),selectedDate.getMonth(),1);closeSheets();renderAll()};
+$('#sheetDelete').onclick=()=>{if(sheetEditingId!==null&&confirm('この予定を削除しますか？'))removeEventOccurrence(sheetEditingId,sheetEditingOccurrence||$('#sheetEventDate').value)};
+$('#detailEdit').onclick=()=>{let ev=eventById(detailEventId);if(ev){let id=detailEventId,occ=detailOccurrence;closeSheets();openSheet(occ,ev.start,ev.end,ev,occ)}};
+$('#detailDelete').onclick=()=>{if(confirm('この予定を削除しますか？'))removeEventOccurrence(detailEventId,detailOccurrence)};
+function bindLongPress(el,callback){el.addEventListener('pointerdown',e=>{if(e.button!==0)return;longPressFired=false;pressOrigin={x:e.clientX,y:e.clientY};pressTimer=setTimeout(()=>{longPressFired=true;callback(e)},520)});['pointerup','pointercancel','pointerleave'].forEach(n=>el.addEventListener(n,()=>clearTimeout(pressTimer)));el.addEventListener('pointermove',e=>{if(pressOrigin&&Math.hypot(e.clientX-pressOrigin.x,e.clientY-pressOrigin.y)>10)clearTimeout(pressTimer)});el.addEventListener('contextmenu',e=>{e.preventDefault();callback(e)})}
+function moveEventToDate(id,newDate,oldDate){let ev=eventById(id);if(!ev)return;if(ev.repeat&&ev.repeat!=='none'){ev.skipDates=ev.skipDates||[];if(!ev.skipDates.includes(oldDate))ev.skipDates.push(oldDate);events.push({...ev,id:eventSeq++,date:newDate,repeat:'none',repeatUntil:'',skipDates:[]})}else ev.date=newDate;renderAll()}
+let timelineDragDuration=60;
+let timelineDragPreview=null;
+function showTimelineDragPreview(e,start){
+ if(!timelineDragPreview){timelineDragPreview=document.createElement('div');timelineDragPreview.className='drag-time-preview';document.body.appendChild(timelineDragPreview)}
+ const end=Math.min(24*60,start+timelineDragDuration);
+ timelineDragPreview.textContent=`${hm(start)} – ${hm(end)}`;
+ // Keep the time badge away from the finger: place it above-right, flipping when near an edge.
+ const badgeWidth=112,badgeHeight=30,gap=16;
+ let left=e.clientX+gap;
+ if(left+badgeWidth>window.innerWidth-6) left=e.clientX-badgeWidth-gap;
+ left=Math.max(6,Math.min(left,window.innerWidth-badgeWidth-6));
+ let top=e.clientY-badgeHeight-gap;
+ if(top<6) top=e.clientY+gap;
+ top=Math.max(6,Math.min(top,window.innerHeight-badgeHeight-6));
+ timelineDragPreview.style.left=left+'px';
+ timelineDragPreview.style.top=top+'px';
+ timelineDragPreview.style.display='block';
+}
+function hideTimelineDragPreview(){if(timelineDragPreview)timelineDragPreview.style.display='none'}
+function getTaskAllDayEntries(dateString){
+ const entries=[];
+ for(const t of tasks){
+  if(t.plannedDate===dateString) entries.push({...t,_calendarLabel:"実施予定"});
+  if(t.dueDate===dateString&&t.dueDate!==t.plannedDate) entries.push({...t,_calendarLabel:"締切"});
+ }
+ return entries;
+}
+function renderDay(){
+ const d=key(selectedDate),dayStart=5*60,dayEnd=24*60;$('#dayTitle').textContent=fmtDate(selectedDate);$('#eventDate').value=d;let placed=getEventsForDate(d);
+ $('#taskPool').innerHTML=tasks.filter(t=>!t.done&&!placed.some(e=>e.taskId===t.id)).map(t=>`<div class="draggable" draggable="true" data-drag="${t.id}"><b>${esc(t.title)}</b><small>${t.minutes}分 · ${t.priority}優先 · ${esc(t.tag||'その他')}</small></div>`).join('')||'<div class="empty">未配置のタスクはありません</div>';
+ $$('[data-drag]').forEach(el=>el.ondragstart=e=>{let t=tasks.find(x=>String(x.id)===String(el.dataset.drag));timelineDragDuration=t?.minutes||60;e.dataTransfer.setData('text/plain','task:'+el.dataset.drag);el.ondragend=hideTimelineDragPreview});let hourLines='';for(let h=5;h<24;h++)hourLines+=`<div class="hour-line"><time>${String(h).padStart(2,'0')}:00</time><div></div></div>`;
+ let allDayEvents=placed.filter(e=>e.allDay);let allDayTasks=getTaskAllDayEntries(d);$('#allDayEvents').innerHTML=[...allDayEvents.map(ev=>`<div class="all-day-event" data-event-card="${ev.sourceId}" data-event-date="${d}" style="${tagInline(ev.tag)}"><b>${esc(ev.title)}</b><span class="all-day-label">終日</span><small>${esc(ev.tag||'その他')}</small></div>`),...allDayTasks.map(t=>`<div class="all-day-event" style="${tagInline(t.tag)}"><b>${esc(t.title)}</b><span class="all-day-label">終日タスク · ${t._calendarLabel}</span><small>${esc(t.tag||'その他')}</small></div>`)].join('')||'<div class="muted" style="font-size:11px;padding:7px 0">終日の予定はありません</div>';let visible=placed.filter(e=>!e.allDay).map(e=>({...e,_s:Math.max(dayStart,mins(e.start)),_e:Math.min(dayEnd,mins(e.end))})).filter(e=>e._e>e._s).sort((a,b)=>a._s-b._s||a._e-b._e);let groups=[];for(const ev of visible){let g=groups[groups.length-1];if(!g||ev._s>=g.end){g={items:[],end:ev._e};groups.push(g)}g.items.push(ev);g.end=Math.max(g.end,ev._e)}for(const g of groups){let lanes=[];for(const ev of g.items){let lane=lanes.findIndex(x=>x<=ev._s);if(lane<0)lane=lanes.length;lanes[lane]=ev._e;ev._lane=lane}for(const ev of g.items)ev._lanes=lanes.length}
+ let html=visible.map(ev=>{let top=ev._s-dayStart,height=ev._e-ev._s,w=100/ev._lanes,left=w*ev._lane,c=tagStyle(ev.tag);return `<div class="placed" draggable="true" data-event-card="${ev.sourceId}" data-event-date="${d}" style="top:${top}px;height:${height}px;left:calc(${left}% + 2px);width:calc(${w}% - 4px);background:${c.bg};border-color:${c.border};color:${c.text}"><span><b>${esc(ev.title)}</b><br><small>${ev.start}–${ev.end}</small></span></div>`}).join('');$('#timeSlots').innerHTML=`<div class="hour-grid">${hourLines}</div><div class="event-layer" id="eventLayer">${html}</div>`;
+ const layer=$('#eventLayer');layer.ondragover=e=>{e.preventDefault();layer.classList.add('dragover');let rect=layer.getBoundingClientRect(),raw=dayStart+(e.clientY-rect.top),start=Math.max(dayStart,Math.min(dayEnd-5,Math.round(raw/5)*5));showTimelineDragPreview(e,start)};layer.ondragleave=e=>{if(!layer.contains(e.relatedTarget)){layer.classList.remove('dragover');hideTimelineDragPreview()}};layer.ondrop=e=>{e.preventDefault();layer.classList.remove('dragover');hideTimelineDragPreview();let payload=e.dataTransfer.getData('text/plain'),rect=layer.getBoundingClientRect(),raw=dayStart+(e.clientY-rect.top),start=Math.max(dayStart,Math.min(dayEnd-5,Math.round(raw/5)*5));if(payload.startsWith('task:')){let t=tasks.find(x=>x.id==payload.slice(5));if(t){t.plannedDate=d;if(t.allDay){events=events.filter(ev=>String(ev.taskId)!==String(t.id))}else if(start+t.minutes<=dayEnd){events=events.filter(ev=>String(ev.taskId)!==String(t.id));events.push({id:eventSeq++,taskId:t.id,title:t.title,start:hm(start),end:hm(start+t.minutes),type:'task',tag:t.tag||'勉強',date:d,repeat:'none',skipDates:[]})}}}else if(payload.startsWith('event:')){let [,id,oldDate]=payload.split(':');let ev=eventById(id);if(ev){let dur=duration(ev.start,ev.end);if(start+dur<=dayEnd){if(ev.repeat&&ev.repeat!=='none'){ev.skipDates=ev.skipDates||[];if(!ev.skipDates.includes(oldDate))ev.skipDates.push(oldDate);events.push({...ev,id:eventSeq++,date:d,start:hm(start),end:hm(start+dur),repeat:'none',repeatUntil:'',skipDates:[]})}else{ev.date=d;ev.start=hm(start);ev.end=hm(start+dur)}if(ev.taskId){let linkedTask=tasks.find(t=>String(t.id)===String(ev.taskId));if(linkedTask)linkedTask.plannedDate=d}}}}renderAll()};
+ $$('[data-event-card]').forEach(el=>{el.addEventListener('pointerdown',e=>e.stopPropagation());el.ondragstart=e=>{let ev=eventById(el.dataset.eventCard);timelineDragDuration=ev?duration(ev.start,ev.end):60;e.dataTransfer.setData('text/plain',`event:${el.dataset.eventCard}:${el.dataset.eventDate}`);e.dataTransfer.effectAllowed='move';el.ondragend=hideTimelineDragPreview};el.onclick=()=>showEventDetail(el.dataset.eventCard,el.dataset.eventDate)});
+ bindLongPress(layer,e=>{let rect=layer.getBoundingClientRect(),raw=dayStart+(e.clientY-rect.top),start=Math.max(dayStart,Math.min(dayEnd-5,Math.round(raw/5)*5));openSheet(d,hm(start),hm(Math.min(start+60,dayEnd)))});
+}
+function renderMonth(){let y=monthDate.getFullYear(),m=monthDate.getMonth();$('#monthTitle').textContent=`${y}年 ${m+1}月`;let first=new Date(y,m,1),offset=first.getDay(),days=new Date(y,m+1,0).getDate();let html=['日','月','火','水','木','金','土'].map(x=>`<div class="weekday">${x}</div>`).join('');for(let i=0;i<offset;i++)html+='<div></div>';for(let n=1;n<=days;n++){let date=new Date(y,m,n),k=key(date),items=getEventsForDate(k).sort((a,b)=>(a.allDay?0:1)-(b.allDay?0:1)||(a.start||'').localeCompare(b.start||''));let taskEntries=getTaskAllDayEntries(k);let calendarCount=items.length+taskEntries.length;html+=`<div class="daycell ${k===key(today)?'today':''}" data-date="${k}"><div class="date">${n}</div>${items.slice(0,3).map(ev=>`<span class="calitem" draggable="true" data-month-event="${ev.sourceId}" data-event-date="${k}" style="${tagInline(ev.tag)}">${ev.allDay?"終日":esc(ev.start)} ${esc(ev.title)}</span>`).join('')}${taskEntries.slice(0,Math.max(0,3-items.length)).map(t=>`<span class="calitem" style="${tagInline(t.tag)}">終日 ${t._calendarLabel}：${esc(t.title)}</span>`).join('')}${calendarCount>3?`<small>+${calendarCount-3}</small>`:''}</div>`}$('#monthGrid').innerHTML=html;
+ const monthPool=$('#monthTaskPool');
+ if(monthPool){
+   const draggableTasks=tasks.filter(t=>!t.done&&!events.some(ev=>String(ev.taskId)===String(t.id)));
+   monthPool.innerHTML=draggableTasks.map(t=>`<div class="draggable" draggable="true" data-month-task="${t.id}"><b>${esc(t.title)}</b><small>${t.minutes}分 · ${t.priority}優先 · ${esc(t.tag||"その他")}${t.plannedDate?` · 現在の実施日 ${shortDate(t.plannedDate)}${t.allDay?"（終日）":""}`:""}${t.dueDate?` · 締切 ${shortDate(t.dueDate)}`:""}</small></div>`).join("")||'<div class="empty">配置できる未完了タスクはありません</div>';
+   $$('[data-month-task]').forEach(el=>{el.ondragstart=e=>{e.dataTransfer.setData('text/plain','task:'+el.dataset.monthTask);e.dataTransfer.effectAllowed='move'}});
+ }
+ $$('[data-date]').forEach(cell=>{cell.ondragover=e=>{e.preventDefault();cell.classList.add('dragover')};cell.ondragleave=()=>cell.classList.remove('dragover');cell.ondrop=e=>{e.preventDefault();cell.classList.remove('dragover');let payload=e.dataTransfer.getData('text/plain');if(payload.startsWith('event:')){let [,id,oldDate]=payload.split(':');moveEventToDate(id,cell.dataset.date,oldDate)}else if(payload.startsWith('task:')){let t=tasks.find(x=>String(x.id)===payload.slice(5));if(t){t.plannedDate=cell.dataset.date;let linked=events.find(ev=>String(ev.taskId)===String(t.id)&&(!ev.repeat||ev.repeat==='none'));if(t.allDay){events=events.filter(ev=>String(ev.taskId)!==String(t.id))}else if(linked){let dur=duration(linked.start,linked.end);linked.date=cell.dataset.date;linked.end=hm(Math.min(1439,mins(linked.start)+dur))}else{let start=540,end=start+t.minutes;if(end>24*60){start=Math.max(5*60,24*60-t.minutes);end=start+t.minutes}events.push({id:eventSeq++,taskId:t.id,title:t.title,date:cell.dataset.date,start:hm(start),end:hm(end),type:'task',tag:t.tag||'勉強',repeat:'none',skipDates:[]})}}renderAll()}};bindLongPress(cell,()=>openSheet(cell.dataset.date,'09:00','10:00'));cell.onclick=e=>{if(longPressFired)return;if(e.target.closest('[data-month-event]'))return;selectedDate=new Date(cell.dataset.date+'T12:00:00');switchView('day')}});
+ $$('[data-month-event]').forEach(el=>{el.addEventListener('pointerdown',e=>e.stopPropagation());el.ondragstart=e=>{e.stopPropagation();e.dataTransfer.setData('text/plain',`event:${el.dataset.monthEvent}:${el.dataset.eventDate}`)};el.onclick=e=>{e.stopPropagation();showEventDetail(el.dataset.monthEvent,el.dataset.eventDate)}})
+}
+
+// --- Supabase account / cloud sync ---
+// Supabase Dashboard > Project Settings > API からURLと anon public keyを設定してください。
+const SUPABASE_URL='https://roxmwfirtldirzdcarhu.supabase.co';
+const SUPABASE_ANON_KEY='sb_publishable_ITvQwNVcrebcwFDWLQTJig_o-MYrRdL';
+const supabaseConfigured=SUPABASE_URL.startsWith('https://')&&SUPABASE_ANON_KEY!=='YOUR_SUPABASE_ANON_KEY';
+if(supabaseConfigured&&window.supabase?.createClient){window.liflowSupabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}})}
+function setAuthMessage(message,type='success'){const el=$('#authMessage');el.textContent=message;el.className='auth-message show '+type}
+function clearAuthMessage(){const el=$('#authMessage');el.textContent='';el.className='auth-message'}
+function setSyncState(text){const el=$('#syncState');if(el)el.textContent=text}
+function setAuthMode(mode){clearAuthMessage();const login=mode==='login';$('#loginForm').style.display=login?'grid':'none';$('#signupForm').style.display=login?'none':'grid';$('#showLogin').classList.toggle('active',login);$('#showSignup').classList.toggle('active',!login)}
+$('#showLogin').onclick=()=>setAuthMode('login');$('#showSignup').onclick=()=>setAuthMode('signup');
+function setAuthBusy(form,busy){const btn=form.querySelector('button[type="submit"]');btn.disabled=busy;btn.textContent=busy?'処理中…':(form.id==='loginForm'?'ログイン':'アカウントを作成')}
+$('#loginForm').onsubmit=async e=>{e.preventDefault();if(!window.liflowSupabase){setAuthMessage('Supabaseの接続設定がまだ完了していません。付属のセットアップ手順に従ってURLとAnon Keyを設定してください。','error');return}const form=e.currentTarget;setAuthBusy(form,true);const {error}=await window.liflowSupabase.auth.signInWithPassword({email:$('#loginEmail').value.trim(),password:$('#loginPassword').value});setAuthBusy(form,false);if(error)setAuthMessage(error.message,'error')};
+$('#signupForm').onsubmit=async e=>{e.preventDefault();if(!window.liflowSupabase){setAuthMessage('Supabaseの接続設定がまだ完了していません。付属のセットアップ手順に従ってURLとAnon Keyを設定してください。','error');return}const password=$('#signupPassword').value;if(password!==$('#signupPasswordConfirm').value){setAuthMessage('確認用パスワードが一致しません。','error');return}const form=e.currentTarget;setAuthBusy(form,true);const {data,error}=await window.liflowSupabase.auth.signUp({email:$('#signupEmail').value.trim(),password});setAuthBusy(form,false);if(error)setAuthMessage(error.message,'error');else if(data.session)setAuthMessage('アカウントを作成しました。ログインしています。','success');else setAuthMessage('確認メールを送信しました。メール内のリンクから登録を完了してください。','success')};
+$('#forgotPassword').onclick=async()=>{if(!window.liflowSupabase){setAuthMessage('先にSupabaseの接続設定を完了してください。','error');return}const email=$('#loginEmail').value.trim();if(!email){setAuthMessage('メールアドレスを入力してください。','error');return}const {error}=await window.liflowSupabase.auth.resetPasswordForEmail(email,{redirectTo:location.href});setAuthMessage(error?error.message:'パスワード再設定用のメールを送信しました。',''+(error?'error':'success'))};
+$('#logoutBtn').onclick=async()=>{if(window.liflowSupabase){await saveCloudData();await window.liflowSupabase.auth.signOut()}};
+async function activateAccount(user){
+  currentUser=user;cloudReady=false;clearTimeout(cloudSaveTimer);$('#authScreen').style.display='none';$('#liflowApp').style.display='flex';$('#accountEmail').textContent=user.email||'';setSyncState('読み込み中…');
+  STORAGE_KEY=USER_STORAGE_PREFIX+user.id;
+  resetDataForNewAccount();
+  try{
+    const {data,error}=await window.liflowSupabase.from('liflow_data').select('data').eq('user_id',user.id).maybeSingle();
+    if(error)throw error;
+    let migrateLegacyAfterSave=false;
+    if(data?.data){loadData(data.data);}
+    else {
+      const personalCache=localStorage.getItem(STORAGE_KEY);
+      const legacy=localStorage.getItem(LEGACY_STORAGE_KEY);const migrated=localStorage.getItem('liflow_legacy_migrated_v1');
+      if(personalCache){loadData(personalCache);}
+      else if(legacy&&!migrated){loadData(legacy);migrateLegacyAfterSave=true;}
+      // New account gets its own isolated dataset; never read another account's cache.
+    }
+    cloudReady=true;
+    renderAll();
+    const saved=await saveCloudData(collectData());
+    if(saved&&migrateLegacyAfterSave)localStorage.setItem('liflow_legacy_migrated_v1','1');
+    if(timer.running){timer.interval=setInterval(()=>{displayTimer();saveData()},500)}
+    $('#timerSelect').value=timer.taskId||'';let restoredTask=tasks.find(t=>t.id==timer.taskId);$('#timerTask').textContent=restoredTask?restoredTask.title:'フリー学習';displayTimer();syncTimerControls();setSyncState('同期済み');
+  }catch(err){console.error(err);setSyncState('接続エラー');alert('クラウドデータを読み込めませんでした。SupabaseのテーブルとRLS設定を確認してください。\n'+(err.message||''));}
+}
+function deactivateAccount(){cloudReady=false;currentUser=null;STORAGE_KEY=null;clearTimeout(cloudSaveTimer);if(timer.interval)clearInterval(timer.interval);$('#liflowApp').style.display='none';$('#authScreen').style.display='grid';$('#accountEmail').textContent='';setSyncState('');setAuthMode('login');$('#loginPassword').value=''}
+async function initAuth(){
+  if(!window.liflowSupabase){$('#authScreen').style.display='grid';setAuthMessage('SupabaseのURL・Anon Keyが未設定です。セットアップ手順を完了するとログインできます。','error');return}
+  const {data:{session}}=await window.liflowSupabase.auth.getSession();
+  if(session?.user)await activateAccount(session.user);
+  window.liflowSupabase.auth.onAuthStateChange((event,session)=>{setTimeout(()=>{if(session?.user){if(!currentUser||currentUser.id!==session.user.id)activateAccount(session.user)}else if(currentUser)deactivateAccount()},0)});
+}
+initAuth();
+</script>
+</body></html>
