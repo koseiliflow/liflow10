@@ -301,6 +301,7 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
    <label class="full">タグ<div class="tag-select-row"><select id="taskTag"><option>勉強</option><option>学校</option><option>部活</option><option>プライベート</option><option>その他</option></select><button type="button" class="btn light small add-tag-btn" id="addTaskTag" title="タグを追加">＋</button><button type="button" class="btn light small add-tag-btn" id="deleteTaskTag" title="選択中のタグを削除">−</button></div></label>
    <label>実施予定日<input id="taskPlanDate" type="date"></label>
    <label>締め切り<input id="taskDueDate" type="date"></label>
+   <label class="full task-sheet-check"><input id="taskNotify" type="checkbox"> 通知を有効にする（実施予定日・締切日の7:00）</label>
    <label class="full task-sheet-check"><input id="taskAllDay" type="checkbox"> 終日タスクとして登録する</label>
   </div>
   <div class="sheet-actions"><button type="button" class="btn light" id="taskSheetCancel">キャンセル</button><button type="submit" class="btn">タスクを追加</button></div>
@@ -387,6 +388,30 @@ async function syncPushReminders(){
     scheduled_for:scheduledFor.toISOString(),reminder_minutes:reminderMinutes,status:"pending"});
   }
  }
+ // Task reminders stay attached to the task when it is placed in the vertical or monthly calendar.
+ for(const task of tasks){
+  if(task.done||!task.notificationEnabled)continue;
+  const taskDates=[
+   {date:task.plannedDate,kind:"planned",minutes:-3},
+   {date:task.dueDate,kind:"due",minutes:-4}
+  ];
+  for(const item of taskDates){
+   if(!item.date)continue;
+   const scheduledFor=new Date(item.date+"T07:00:00");
+   // If registered or moved to today after 7:00, send as soon as possible.
+   if(scheduledFor<=now&&item.date===key(now))scheduledFor.setTime(now.getTime()+5000);
+   if(scheduledFor<=now)continue;
+   rows.push({
+    user_id:userId,
+    event_id:"task-"+String(task.id)+"-"+item.kind,
+    occurrence_date:item.date,
+    title:task.title,
+    scheduled_for:scheduledFor.toISOString(),
+    reminder_minutes:item.minutes,
+    status:"pending"
+   });
+  }
+ }
  for(let i=0;i<rows.length;i+=200){
   const {error}=await window.liflowSupabase.from("push_reminders").insert(rows.slice(i,i+200));
   if(error)throw error;
@@ -441,7 +466,7 @@ function loadData(rawOverride=null){
   try {
     const raw=rawOverride!==null?rawOverride:(STORAGE_KEY?localStorage.getItem(STORAGE_KEY):null); if(!raw)return;
     const data=typeof raw==='string'?JSON.parse(raw):raw;
-    if(Array.isArray(data.tasks)) tasks=data.tasks.map(t=>({...t,tag:t.tag||"勉強",plannedDate:t.plannedDate||"",dueDate:t.dueDate||"",allDay:!!t.allDay}));
+    if(Array.isArray(data.tasks)) tasks=data.tasks.map(t=>({...t,tag:t.tag||"勉強",plannedDate:t.plannedDate||"",dueDate:t.dueDate||"",allDay:!!t.allDay,notificationEnabled:!!t.notificationEnabled}));
     if(Array.isArray(data.events)) events=data.events.map(e=>({...e,tag:e.tag||(e.type==="school"?"学校":(e.taskId?((tasks.find(t=>String(t.id)===String(e.taskId))||{}).tag||"勉強"):"その他")),repeat:e.repeat||"none",allDay:!!e.allDay,reminderMinutes:Number(e.reminderMinutes)||0,skipDates:Array.isArray(e.skipDates)?e.skipDates:[]}));
     // Remove only the exact built-in demo entries from older starter data; preserve user-created content.
     const demoTasks=new Set(["数学の課題を進める","英単語を30個覚える","機械工作の予習","英語レポート"]);
@@ -570,7 +595,7 @@ $("#deleteSheetEventTag").onclick=()=>deleteTag("schedule","#sheetEventTag");
 refreshTagSelects();
 
 $("#openTaskSheet").onclick=()=>{
-  $("#taskTitle").value="";$("#taskMinutes").value=30;$("#taskPlanDate").value="";$("#taskDueDate").value="";$("#taskAllDay").checked=false;$("#taskPriority").value="普通";
+  $("#taskTitle").value="";$("#taskMinutes").value=30;$("#taskPlanDate").value="";$("#taskDueDate").value="";$("#taskNotify").checked=false;$("#taskAllDay").checked=false;$("#taskPriority").value="普通";
   backdrop.classList.add("open");taskSheet.classList.add("open");
   setTimeout(()=>$("#taskTitle").focus(),180);
 };
@@ -582,7 +607,7 @@ $("#taskForm").onsubmit=e=>{
   let plannedDate=$("#taskPlanDate").value,dueDate=$("#taskDueDate").value,allDay=$("#taskAllDay").checked;
   if(allDay&&!plannedDate){alert("終日タスクには実施予定日を設定してください。");$("#taskPlanDate").focus();return}
   if(plannedDate&&dueDate&&dueDate<plannedDate){alert("締め切りは実施予定日以降の日付にしてください。");return}
-  tasks.push({id:Date.now(),title,minutes:Math.max(5,Math.round(rawMinutes/5)*5),priority:$("#taskPriority").value,tag:$("#taskTag").value,plannedDate,dueDate,allDay,done:false});
+  tasks.push({id:Date.now(),title,minutes:Math.max(5,Math.round(rawMinutes/5)*5),priority:$("#taskPriority").value,tag:$("#taskTag").value,plannedDate,dueDate,allDay,notificationEnabled:$("#taskNotify").checked,done:false});
   closeSheets();renderAll();
 };
 $("#eventAllDay").onchange=()=>{const disabled=$("#eventAllDay").checked;$("#eventStart").disabled=disabled;$("#eventEnd").disabled=disabled;};
