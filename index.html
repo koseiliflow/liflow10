@@ -234,6 +234,19 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
  .btn.light:hover,.tag-filter-chip:not(.active):hover{background:var(--accent-hover)}
 }
 
+/* Liflow theme refinement: unify component frames and navigation icons */
+.nav button{color:var(--accent-ink)}
+.nav button.active{background:var(--green2);color:var(--accent-ink)}
+.nav .nav-icon{display:block;flex:0 0 20px;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+@media(max-width:850px){.nav .nav-icon{width:21px;height:21px;flex-basis:21px}}
+@media(max-width:520px){.nav .nav-icon{width:24px;height:24px;flex-basis:24px}}
+.card,.stat,.timeline,.daycell,.draggable,.auth-card,.bottom-sheet,.settings-item,.tag-filter-chip,.sheet-close,.toolbar select,.toolbar input,.field,.schedule-form input,.schedule-form select,.task-field input,.task-field select,.sheet-fields input,.sheet-fields select,.sheet-fields textarea,.auth-form input{border-color:var(--accent-border)}
+.card,.stat,.timeline,.daycell,.draggable,.auth-card,.bottom-sheet,.settings-item{box-shadow:0 1px 3px color-mix(in srgb,var(--green) 7%,transparent)}
+.tag-filter-chip:not(.active){border-color:var(--accent-line)}
+#timerStop:not(:disabled){background:var(--green);color:#fff;border:1px solid var(--green)}
+#timerStop:disabled{background:var(--green2);color:var(--accent-ink);border:1px solid var(--accent-border);opacity:.8}
+#timerStop:not(:disabled):hover{background:color-mix(in srgb,var(--green) 88%,#17231d)}
+
 </style>
 </head>
 <body>
@@ -264,11 +277,11 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
 <aside class="sidebar">
 <div class="brand">Liflow<span>.</span></div><div class="sub">STUDENT LIFE ORGANIZER</div>
 <nav class="nav">
-<button class="active" data-view="home"><i>⌂</i><span class="label">ホーム</span></button>
-<button data-view="day"><i>◷</i><span class="label">スケジュール</span></button>
-<button data-view="month"><i>▦</i><span class="label">マンスリー</span></button>
-<button data-view="tasks"><i>☑</i><span class="label">タスク</span></button>
-<button data-view="focus"><i>◉</i><span class="label">フォーカス</span></button>
+<button class="active" data-view="home"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7"/><path d="M5.5 9v11h13V9"/><path d="M9.5 20v-6h5v6"/></svg><span class="label">ホーム</span></button>
+<button data-view="day"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M7.5 3v4M16.5 3v4M3.5 9.5h17M8 13h3M8 16.5h3M14 13h2.5"/></svg><span class="label">スケジュール</span></button>
+<button data-view="month"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4" width="17" height="17" rx="2.5"/><path d="M8 4v17M14 4v17M3.5 10h17M3.5 15.5h17"/></svg><span class="label">マンスリー</span></button>
+<button data-view="tasks"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4.5" width="14" height="17" rx="2"/><path d="M9 4.5V3h6v1.5M8.5 11l2 2 5-5M8.5 17h7"/></svg><span class="label">タスク</span></button>
+<button data-view="focus"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M22 12h-3M12 22v-3M2 12h3"/></svg><span class="label">フォーカス</span></button>
 </nav>
 <div class="sidebar-note">小さな積み重ねが、<br>毎日の流れをつくる。</div>
 </aside>
