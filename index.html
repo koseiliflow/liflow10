@@ -284,7 +284,7 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
   <label>カテゴリー<div class="tag-select-row"><select id="sheetEventTag"><option>学校</option><option>勉強</option><option>部活</option><option>プライベート</option><option>その他</option></select><button type="button" class="btn light small add-tag-btn" id="addSheetEventTag" title="タグを追加">＋</button><button type="button" class="btn light small add-tag-btn" id="deleteSheetEventTag" title="選択中のタグを削除">−</button></div></label>
   <label>開始時刻<input id="sheetEventStart" type="time" step="300" required></label>
   <label>終了時刻<input id="sheetEventEnd" type="time" step="300" required></label>
-  <label>通知<select id="sheetEventReminder"><option value="0">通知しない</option><option value="5">5分前</option><option value="10">10分前</option><option value="15">15分前</option><option value="30">30分前</option></select></label>
+  <label>通知<select id="sheetEventReminder"><option value="0">通知しない</option><option value="-1">予定の時刻</option><option value="5">5分前</option><option value="10">10分前</option><option value="15">15分前</option><option value="30">30分前</option><option value="60">1時間前</option><option value="-2">当日の朝（7:00）</option><option value="1440">前日</option><option value="10080">一週間前</option></select></label>
   <label>繰り返し<select id="sheetEventRepeat"><option value="none">繰り返さない</option><option value="daily">毎日</option><option value="weekly">毎週</option><option value="weekdays">平日</option></select></label>
   <label>繰り返し終了日<input id="sheetEventRepeatUntil" type="date"></label>
   <label class="full">メモ<textarea id="sheetEventNote" placeholder="予定の詳細（任意）"></textarea></label>
@@ -367,13 +367,20 @@ async function syncPushReminders(){
  const now=new Date(),rows=[];
  for(const ev of events){
   const reminderMinutes=Number(ev.reminderMinutes)||0;
-  if(reminderMinutes<=0)continue;
+  if(reminderMinutes===0)continue;
   for(let offset=0;offset<60;offset++){
    const date=key(new Date(now.getFullYear(),now.getMonth(),now.getDate()+offset,12));
    if(!eventOccursOn(ev,date))continue;
    const startTime=ev.allDay?"09:00":(ev.start||"09:00");
    const startAt=new Date(date+"T"+startTime+":00");
-   const scheduledFor=new Date(startAt.getTime()-reminderMinutes*60000);
+   let scheduledFor;
+   if(reminderMinutes===-1){
+    scheduledFor=startAt;
+   }else if(reminderMinutes===-2){
+    scheduledFor=new Date(date+"T07:00:00");
+   }else{
+    scheduledFor=new Date(startAt.getTime()-reminderMinutes*60000);
+   }
    if(scheduledFor<=now)continue;
    rows.push({user_id:userId,event_id:String(ev.id),occurrence_date:date,title:ev.title,
     scheduled_for:scheduledFor.toISOString(),reminder_minutes:reminderMinutes,status:"pending"});
