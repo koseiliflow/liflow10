@@ -546,8 +546,8 @@ function renderTasks(){
     </details>`;
   $$("[data-tasktag]").forEach(b=>b.onclick=()=>{selectedTaskTag=b.dataset.tasktag;renderTasks()});
   $$("[data-taskcheck]").forEach(c=>c.onchange=()=>{tasks.find(t=>t.id==c.dataset.taskcheck).done=c.checked;renderAll()});
-  $("[data-edit-task]").forEach(b=>b.onclick=()=>openTaskEditor(b.dataset.editTask));
-  $("[data-delete]").forEach(b=>b.onclick=()=>{if(confirm("このタスクを削除しますか？")){tasks=tasks.filter(t=>String(t.id)!==String(b.dataset.delete));events=events.filter(ev=>String(ev.taskId)!==String(b.dataset.delete));renderAll()}});
+  $$("[data-edit-task]").forEach(b=>b.onclick=()=>openTaskEditor(b.dataset.editTask));
+  $$("[data-delete]").forEach(b=>b.onclick=()=>{if(confirm("このタスクを削除しますか？")){tasks=tasks.filter(t=>String(t.id)!==String(b.dataset.delete));events=events.filter(ev=>String(ev.taskId)!==String(b.dataset.delete));renderAll()}});
   $$("[data-focus]").forEach(b=>b.onclick=()=>{switchView("focus");$("#timerSelect").value=b.dataset.focus;$("#timerTask").textContent=tasks.find(t=>t.id==b.dataset.focus)?.title||"学習";});
 }
 function refreshTagSelects(){
