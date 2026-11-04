@@ -525,7 +525,7 @@ function renderTasks(){
     let delta=actual===0?'<span class="comparison-delta none">まだ計測なし</span>':actual>planned?`<span class="comparison-delta over">予定より ${formatElapsed(actual-planned)} 長い</span>`:actual<planned?`<span class="comparison-delta under">予定より ${formatElapsed(planned-actual)} 短い</span>`:'<span class="comparison-delta under">予定どおり</span>';
     let overdue=t.dueDate&&t.dueDate<key(today)&&!t.done;
     let meta=`<span class="tag-dot" style="${tagInline(t.tag)}">${esc(t.tag||"その他")}</span>${t.plannedDate?`<span>実施予定：${shortDate(t.plannedDate)}${t.allDay?"（終日）":""}</span>`:""}${t.dueDate?`<span class="${overdue?"late":""}">締め切り：${shortDate(t.dueDate)}${overdue?"（期限超過）":""}</span>`:""}`;
-    return `<div class="taskrow"><input type="checkbox" data-taskcheck="${t.id}" ${t.done?"checked":""}><div class="taskname ${t.done?"done":""}">${esc(t.title)}<div class="muted" style="font-size:11px">${t.priority}優先</div><div class="task-meta">${meta}</div><div class="task-comparison"><div class="comparison-values"><span>予定 <b>${t.minutes}分</b></span><span>実績 <b>${actual?formatElapsed(actual):"0分00秒"}</b></span>${delta}</div><div class="progress compare-progress"><span style="width:${pct}%"></span></div></div></div>${t.done?'<span class="tag">完了</span>':`<button class="btn light small" data-focus="${t.id}">計測</button>`}<button class="btn ghost small" data-delete="${t.id}">削除</button></div>`
+    return `<div class="taskrow"><input type="checkbox" data-taskcheck="${t.id}" ${t.done?"checked":""}><div class="taskname ${t.done?"done":""}">${esc(t.title)}<div class="muted" style="font-size:11px">${t.priority}優先</div><div class="task-meta">${meta}</div><div class="task-comparison"><div class="comparison-values"><span>予定 <b>${t.minutes}分</b></span><span>実績 <b>${actual?formatElapsed(actual):"0分00秒"}</b></span>${delta}</div><div class="progress compare-progress"><span style="width:${pct}%"></span></div></div></div>${t.done?'<span class="tag">完了</span>':`<button class="btn light small" data-focus="${t.id}">計測</button>`}<button class="btn light small" data-edit-task="${t.id}">編集</button><button class="btn ghost small" data-delete="${t.id}">削除</button></div>`
   }).join("");
   const activeHtml=renderTaskRows(activeTasks);
   const completedHtml=renderTaskRows(completedTasks);
@@ -546,7 +546,8 @@ function renderTasks(){
     </details>`;
   $$("[data-tasktag]").forEach(b=>b.onclick=()=>{selectedTaskTag=b.dataset.tasktag;renderTasks()});
   $$("[data-taskcheck]").forEach(c=>c.onchange=()=>{tasks.find(t=>t.id==c.dataset.taskcheck).done=c.checked;renderAll()});
-  $$("[data-delete]").forEach(b=>b.onclick=()=>{tasks=tasks.filter(t=>t.id!=b.dataset.delete);renderAll()});
+  $("[data-edit-task]").forEach(b=>b.onclick=()=>openTaskEditor(b.dataset.editTask));
+  $("[data-delete]").forEach(b=>b.onclick=()=>{if(confirm("このタスクを削除しますか？")){tasks=tasks.filter(t=>String(t.id)!==String(b.dataset.delete));events=events.filter(ev=>String(ev.taskId)!==String(b.dataset.delete));renderAll()}});
   $$("[data-focus]").forEach(b=>b.onclick=()=>{switchView("focus");$("#timerSelect").value=b.dataset.focus;$("#timerTask").textContent=tasks.find(t=>t.id==b.dataset.focus)?.title||"学習";});
 }
 function refreshTagSelects(){
@@ -593,11 +594,25 @@ $("#deleteEventTag").onclick=()=>deleteTag("schedule","#eventTag");
 $("#deleteSheetEventTag").onclick=()=>deleteTag("schedule","#sheetEventTag");
 refreshTagSelects();
 
-$("#openTaskSheet").onclick=()=>{
-  $("#taskTitle").value="";$("#taskMinutes").value=30;$("#taskPlanDate").value="";$("#taskDueDate").value="";$("#taskNotify").checked=false;$("#taskAllDay").checked=false;$("#taskPriority").value="普通";
+function openTaskEditor(id=null){
+  closeSheets();
+  const task=id===null?null:tasks.find(t=>String(t.id)===String(id));
+  if(id!==null&&!task)return;
+  taskEditingId=task?task.id:null;
+  $("#taskSheetTitle").textContent=task?"タスクを編集":"新しいタスク";
+  $("#taskForm button[type=submit]").textContent=task?"変更を保存":"タスクを追加";
+  $("#taskTitle").value=task?.title||"";
+  $("#taskMinutes").value=task?.minutes||30;
+  $("#taskPlanDate").value=task?.plannedDate||"";
+  $("#taskDueDate").value=task?.dueDate||"";
+  $("#taskNotify").checked=!!task?.notificationEnabled;
+  $("#taskAllDay").checked=!!task?.allDay;
+  $("#taskPriority").value=task?.priority||"普通";
+  refreshTagSelects();$("#taskTag").value=task?.tag||"勉強";
   backdrop.classList.add("open");taskSheet.classList.add("open");
   setTimeout(()=>$("#taskTitle").focus(),180);
-};
+}
+$("#openTaskSheet").onclick=()=>openTaskEditor();
 $("#taskSheetClose").onclick=$("#taskSheetCancel").onclick=closeSheets;
 $("#taskForm").onsubmit=e=>{
   e.preventDefault();
@@ -606,7 +621,17 @@ $("#taskForm").onsubmit=e=>{
   let plannedDate=$("#taskPlanDate").value,dueDate=$("#taskDueDate").value,allDay=$("#taskAllDay").checked;
   if(allDay&&!plannedDate){alert("終日タスクには実施予定日を設定してください。");$("#taskPlanDate").focus();return}
   if(plannedDate&&dueDate&&dueDate<plannedDate){alert("締め切りは実施予定日以降の日付にしてください。");return}
-  tasks.push({id:Date.now(),title,minutes:Math.max(5,Math.round(rawMinutes/5)*5),priority:$("#taskPriority").value,tag:$("#taskTag").value,plannedDate,dueDate,allDay,notificationEnabled:$("#taskNotify").checked,done:false});
+  const updates={title,minutes:Math.max(5,Math.round(rawMinutes/5)*5),priority:$("#taskPriority").value,tag:$("#taskTag").value,plannedDate,dueDate,allDay,notificationEnabled:$("#taskNotify").checked};
+  if(taskEditingId!==null){
+    const task=tasks.find(t=>String(t.id)===String(taskEditingId));
+    if(!task)return;
+    Object.assign(task,updates);
+    const linkedEvents=events.filter(ev=>String(ev.taskId)===String(task.id));
+    if(allDay||!plannedDate){events=events.filter(ev=>String(ev.taskId)!==String(task.id));}
+    else linkedEvents.forEach(ev=>{ev.date=plannedDate;ev.title=title;ev.tag=updates.tag;});
+  }else{
+    tasks.push({id:Date.now(),...updates,done:false});
+  }
   closeSheets();renderAll();
 };
 $("#eventAllDay").onchange=()=>{const disabled=$("#eventAllDay").checked;$("#eventStart").disabled=disabled;$("#eventEnd").disabled=disabled;};
@@ -713,10 +738,10 @@ function renderSessions(){$("#sessionList").innerHTML=sessions.map(s=>`<div clas
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 
 // 0.5: long-press creation, event detail/edit/delete, and drag-to-reschedule.
-let sheetEditingId=null, sheetEditingOccurrence=null, detailEventId=null, detailOccurrence=null, pressTimer=null, pressOrigin=null, longPressFired=false;
+let sheetEditingId=null, sheetEditingOccurrence=null, taskEditingId=null, detailEventId=null, detailOccurrence=null, pressTimer=null, pressOrigin=null, longPressFired=false;
 const backdrop=$('#sheetBackdrop'), eventSheet=$('#eventSheet'), detailSheet=$('#detailSheet');
 const taskSheet=$('#taskSheet');
-function closeSheets(){backdrop.classList.remove('open');eventSheet.classList.remove('open');taskSheet.classList.remove('open');detailSheet.classList.remove('open');sheetEditingId=null;sheetEditingOccurrence=null}
+function closeSheets(){backdrop.classList.remove('open');eventSheet.classList.remove('open');taskSheet.classList.remove('open');detailSheet.classList.remove('open');sheetEditingId=null;sheetEditingOccurrence=null;taskEditingId=null}
 function openSheet(date,start='09:00',end='10:00',ev=null,occurrence=null){
  closeSheets();sheetEditingId=ev?ev.id:null;sheetEditingOccurrence=occurrence;
  $('#sheetTitle').textContent=ev?'予定を編集':'新しい予定';$('#sheetSave').textContent=ev?'変更を保存':'予定を作成';$('#sheetDelete').style.display=ev?'':'none';
