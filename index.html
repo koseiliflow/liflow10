@@ -451,7 +451,7 @@ function applyBaseTheme(id,save=true){
  if(save){try{localStorage.setItem("liflow_base_theme",theme.id)}catch(e){}}
  const current=$("#themeCurrent");
  if(current)current.textContent=theme.name;
- $(".theme-swatch").forEach(button=>{
+ $$(".theme-swatch").forEach(button=>{
   const selected=button.dataset.theme===theme.id;
   button.classList.toggle("selected",selected);
   button.setAttribute("aria-pressed",selected?"true":"false");
