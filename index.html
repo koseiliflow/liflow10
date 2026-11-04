@@ -192,6 +192,48 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
 .tag-color-swatch.selected:after{content:"✓";position:absolute;inset:0;display:grid;place-items:center;color:#34483b;font-weight:800;font-size:18px;text-shadow:0 1px 2px #fff}
 .tag-color-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
 
+
+/* Liflow theme consistency: synchronize accent borders, text and soft surfaces */
+:root{
+ --accent-ink:color-mix(in srgb,var(--green) 76%,#202a2a);
+ --accent-border:color-mix(in srgb,var(--green) 42%,white);
+ --accent-line:color-mix(in srgb,var(--green) 22%,var(--line));
+ --accent-tint:color-mix(in srgb,var(--green) 9%,white);
+ --accent-hover:color-mix(in srgb,var(--green) 16%,white);
+}
+.nav button.active,.nav button:hover{color:var(--accent-ink)}
+.sidebar-note{background:var(--accent-tint);border:1px solid var(--accent-line)}
+.stat em,.tag,.btn.light,.auth-link,.auth-tabs button.active,.all-day-label{color:var(--accent-ink)}
+.tag,.btn.light,.all-day-label{background:var(--green2)}
+.btn.light:hover,.tag-filter-chip:hover{border-color:var(--accent-border)}
+.progress{background:color-mix(in srgb,var(--green) 10%,white)}
+.taskrow{border-bottom-color:var(--accent-line)}
+.eventbody{background:var(--accent-tint);border-left-color:var(--green)}
+.daycell.today{border-color:var(--green);background:var(--accent-tint)}
+.slot.dragover .dropzone,.event-layer.dragover,.daycell.dragover{background:var(--accent-hover)}
+.placed{border-color:var(--green)}
+.all-day-event{border-left-color:var(--green);background:var(--accent-tint)}
+.toolbar select:focus,.toolbar input:focus,.field:focus,
+.schedule-form input:focus,.schedule-form select:focus,
+.task-field input:focus,.task-field select:focus,
+.sheet-fields input:focus,.sheet-fields select:focus,.sheet-fields textarea:focus,
+.auth-form input:focus{
+ outline:none;border-color:var(--green);
+ box-shadow:0 0 0 3px color-mix(in srgb,var(--green) 14%,transparent)
+}
+.auth-screen{background:linear-gradient(135deg,var(--bg),var(--accent-tint))}
+.auth-tabs button.active{box-shadow:0 1px 4px color-mix(in srgb,var(--green) 14%,transparent)}
+.auth-form input{background:color-mix(in srgb,var(--bg) 45%,white)}
+.auth-link{color:var(--accent-ink)}
+.settings-item{background:color-mix(in srgb,var(--bg) 55%,white);border-color:var(--accent-line)}
+.theme-swatch.selected,.tag-color-swatch.selected{box-shadow:0 0 0 2px var(--green)}
+.tag-color-swatch.selected:after{color:var(--accent-ink)}
+.tag-filter-chip.active{background:var(--green);border-color:var(--green)}
+.all-day-label{background:var(--green2)}
+@media(hover:hover){
+ .btn.light:hover,.tag-filter-chip:not(.active):hover{background:var(--accent-hover)}
+}
+
 </style>
 </head>
 <body>
@@ -463,6 +505,14 @@ const LIFLOW_THEMES=[
  {id:"navy",name:"ネイビー",main:"#536b91",soft:"#e9edf5",background:"#f6f8fb"},
  {id:"gray",name:"グレー",main:"#78838b",soft:"#edf0f2",background:"#f7f8f9"}
 ];
+// 起動時にも保存済みベースカラーを反映（選択UIの生成は設定画面を開くまで遅延）
+try{
+ const savedThemeId=localStorage.getItem("liflow_base_theme")||"green";
+ const startupTheme=LIFLOW_THEMES.find(item=>item.id===savedThemeId)||LIFLOW_THEMES[0];
+ document.documentElement.style.setProperty("--green",startupTheme.main);
+ document.documentElement.style.setProperty("--green2",startupTheme.soft);
+ document.documentElement.style.setProperty("--bg",startupTheme.background);
+}catch(e){}
 function applyBaseTheme(id,save=true){
  const theme=LIFLOW_THEMES.find(item=>item.id===id)||LIFLOW_THEMES[0];
  document.documentElement.style.setProperty("--green",theme.main);
