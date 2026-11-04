@@ -335,7 +335,26 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const $=s=>document.querySelector(s), $=s=>[...document.querySelectorAll(s)];
+
+// ログイン送信を最優先で捕捉し、JSの後続初期化に失敗してもページ遷移させない
+document.addEventListener("submit",async event=>{
+ if(event.target?.id!=="loginForm")return;
+ event.preventDefault();
+ event.stopImmediatePropagation();
+ const form=event.target,button=form.querySelector('button[type="submit"]'),message=document.querySelector("#authMessage");
+ const show=(value,type="error")=>{if(message){message.textContent=value;message.className="auth-message "+type}};
+ if(!window.liflowSupabase){show("Supabaseに接続できません。ページを再読み込みして、もう一度お試しください。");return}
+ button.disabled=true;button.textContent="処理中…";
+ try{
+  const {error}=await window.liflowSupabase.auth.signInWithPassword({
+   email:document.querySelector("#loginEmail").value.trim(),
+   password:document.querySelector("#loginPassword").value
+  });
+  if(error)show(error.message);
+ }catch(error){show(error?.message||"ログイン中にエラーが発生しました。")}
+ finally{button.disabled=false;button.textContent="ログイン"}
+},true);
 
 /* Liflow Web Push: GitHub Pages + Supabase */
 const LIFLOW_VAPID_PUBLIC_KEY="BAAwWxHxuyY9TY1tTpEbFNA6NwTPqt0TjoHit0OlQ21GrIn0UBL7pXKBbkhIFSuTU8kRP--2h9ja4W6DNtW7ABA";
