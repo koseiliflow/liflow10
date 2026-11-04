@@ -224,7 +224,7 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
 <div class="sidebar-note">小さな積み重ねが、<br>毎日の流れをつくる。</div>
 </aside>
 <main>
-<header class="top"><div><div class="eyebrow liflow-top-logo">Liflow<span>.</span></div><h1 id="pageTitle">今日も、いい一日に。</h1></div><div class="account-tools"><span class="account-email" id="accountEmail"></span><span class="sync-state" id="syncState"></span><button class="btn ghost small" id="logoutBtn" type="button">ログアウト</button><div class="datepill" id="todayLabel"></div></div></header>
+<header class="top"><div><div class="eyebrow liflow-top-logo">Liflow<span>.</span></div><h1 id="pageTitle">今日も、いい一日に。</h1></div><div class="account-tools"><span class="account-email" id="accountEmail"></span><span class="sync-state" id="syncState"></span><button class="btn light small" id="enablePushBtn" type="button">通知を有効にする</button><button class="btn ghost small" id="logoutBtn" type="button">ログアウト</button><div class="datepill" id="todayLabel"></div></div></header>
 <section id="home" class="view show">
 <div class="stats">
 <div class="stat"><small>今日のタスク完了</small><strong id="homeDone">0/0</strong><em id="homePct">0% 完了</em></div>
@@ -284,6 +284,7 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
   <label>カテゴリー<div class="tag-select-row"><select id="sheetEventTag"><option>学校</option><option>勉強</option><option>部活</option><option>プライベート</option><option>その他</option></select><button type="button" class="btn light small add-tag-btn" id="addSheetEventTag" title="タグを追加">＋</button><button type="button" class="btn light small add-tag-btn" id="deleteSheetEventTag" title="選択中のタグを削除">−</button></div></label>
   <label>開始時刻<input id="sheetEventStart" type="time" step="300" required></label>
   <label>終了時刻<input id="sheetEventEnd" type="time" step="300" required></label>
+  <label>通知<select id="sheetEventReminder"><option value="0">通知しない</option><option value="5">5分前</option><option value="10">10分前</option><option value="15">15分前</option><option value="30">30分前</option></select></label>
   <label>繰り返し<select id="sheetEventRepeat"><option value="none">繰り返さない</option><option value="daily">毎日</option><option value="weekly">毎週</option><option value="weekdays">平日</option></select></label>
   <label>繰り返し終了日<input id="sheetEventRepeatUntil" type="date"></label>
   <label class="full">メモ<textarea id="sheetEventNote" placeholder="予定の詳細（任意）"></textarea></label>
@@ -318,6 +319,74 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+
+/* Liflow Web Push: GitHub Pages + Supabase */
+const LIFLOW_VAPID_PUBLIC_KEY="BAAwWxHxuyY9TY1tTpEbFNA6NwTPqt0TjoHit0OlQ21GrIn0UBL7pXKBbkhIFSuTU8kRP--2h9ja4W6DNtW7ABA";
+const LIFLOW_PUSH_SCOPE="/liflow10/";
+function urlBase64ToUint8Array(value){
+ const padding="=".repeat((4-value.length%4)%4);
+ const raw=atob((value+padding).replace(/-/g,"+").replace(/_/g,"/"));
+ return Uint8Array.from(raw,c=>c.charCodeAt(0));
+}
+async function enablePushNotifications(){
+ if(!("serviceWorker" in navigator)||!("PushManager" in window)||!("Notification" in window)){
+  alert("このブラウザはWebプッシュ通知に対応していません。");return;
+ }
+ if(!currentUser||!window.liflowSupabase){alert("ログインしてから通知を有効にしてください。");return;}
+ try{
+  const permission=await Notification.requestPermission();
+  if(permission!=="granted"){alert("通知が許可されませんでした。ブラウザの設定から通知を許可してください。");return;}
+  const registration=await navigator.serviceWorker.register(LIFLOW_PUSH_SCOPE+"sw.js",{scope:LIFLOW_PUSH_SCOPE});
+  await navigator.serviceWorker.ready;
+  let subscription=await registration.pushManager.getSubscription();
+  if(!subscription)subscription=await registration.pushManager.subscribe({
+   userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(LIFLOW_VAPID_PUBLIC_KEY)
+  });
+  const {error}=await window.liflowSupabase.from("push_subscriptions").upsert({
+   user_id:currentUser.id,endpoint:subscription.endpoint,subscription:subscription.toJSON(),updated_at:new Date().toISOString()
+  },{onConflict:"endpoint"});
+  if(error)throw error;
+  $("#enablePushBtn").textContent="通知設定済み";
+  alert("通知を有効にしました。予定ごとに通知タイミングを設定できます。");
+  await syncPushReminders();
+ }catch(err){
+  console.error("Push setup failed:",err);
+  alert("通知の設定に失敗しました。Supabaseの通知設定とブラウザの権限を確認してください。\n"+(err.message||err));
+ }
+}
+function updatePushButton(){
+ const button=$("#enablePushBtn");if(!button)return;
+ if(!("Notification" in window)){button.textContent="通知非対応";button.disabled=true;return;}
+ button.textContent=Notification.permission==="granted"?"通知設定済み":"通知を有効にする";
+}
+async function syncPushReminders(){
+ if(!currentUser||!cloudReady||!window.liflowSupabase)return;
+ const userId=currentUser.id;
+ const {error:deleteError}=await window.liflowSupabase.from("push_reminders").delete().eq("user_id",userId).eq("status","pending");
+ if(deleteError)throw deleteError;
+ const now=new Date(),rows=[];
+ for(const ev of events){
+  const reminderMinutes=Number(ev.reminderMinutes)||0;
+  if(reminderMinutes<=0)continue;
+  for(let offset=0;offset<60;offset++){
+   const date=key(new Date(now.getFullYear(),now.getMonth(),now.getDate()+offset,12));
+   if(!eventOccursOn(ev,date))continue;
+   const startTime=ev.allDay?"09:00":(ev.start||"09:00");
+   const startAt=new Date(date+"T"+startTime+":00");
+   const scheduledFor=new Date(startAt.getTime()-reminderMinutes*60000);
+   if(scheduledFor<=now)continue;
+   rows.push({user_id:userId,event_id:String(ev.id),occurrence_date:date,title:ev.title,
+    scheduled_for:scheduledFor.toISOString(),reminder_minutes:reminderMinutes,status:"pending"});
+  }
+ }
+ for(let i=0;i<rows.length;i+=200){
+  const {error}=await window.liflowSupabase.from("push_reminders").insert(rows.slice(i,i+200));
+  if(error)throw error;
+ }
+}
+$("#enablePushBtn")?.addEventListener("click",enablePushNotifications);
+updatePushButton();
+
 const today=new Date(); let selectedDate=new Date(today); let monthDate=new Date(today.getFullYear(),today.getMonth(),1);
 const TAG_STYLES={
   "学校":{bg:"#edf1fa",text:"#60769a",border:"#8da0c2"},
@@ -356,14 +425,16 @@ async function saveCloudData(snapshot=collectData()){
   const {error}=await window.liflowSupabase.from('liflow_data').upsert({user_id:currentUser.id,data:snapshot,updated_at:new Date().toISOString()},{onConflict:'user_id'});
   cloudSaveInProgress=false;
   if(error){console.error('Liflow cloud save failed:',error);setSyncState('同期エラー');return false;}
-  setSyncState('同期済み');return true;
+  setSyncState('同期済み');
+  syncPushReminders().catch(err=>console.error('Push reminder sync failed:',err));
+  return true;
 }
 function loadData(rawOverride=null){
   try {
     const raw=rawOverride!==null?rawOverride:(STORAGE_KEY?localStorage.getItem(STORAGE_KEY):null); if(!raw)return;
     const data=typeof raw==='string'?JSON.parse(raw):raw;
     if(Array.isArray(data.tasks)) tasks=data.tasks.map(t=>({...t,tag:t.tag||"勉強",plannedDate:t.plannedDate||"",dueDate:t.dueDate||"",allDay:!!t.allDay}));
-    if(Array.isArray(data.events)) events=data.events.map(e=>({...e,tag:e.tag||(e.type==="school"?"学校":(e.taskId?((tasks.find(t=>String(t.id)===String(e.taskId))||{}).tag||"勉強"):"その他")),repeat:e.repeat||"none",allDay:!!e.allDay,skipDates:Array.isArray(e.skipDates)?e.skipDates:[]}));
+    if(Array.isArray(data.events)) events=data.events.map(e=>({...e,tag:e.tag||(e.type==="school"?"学校":(e.taskId?((tasks.find(t=>String(t.id)===String(e.taskId))||{}).tag||"勉強"):"その他")),repeat:e.repeat||"none",allDay:!!e.allDay,reminderMinutes:Number(e.reminderMinutes)||0,skipDates:Array.isArray(e.skipDates)?e.skipDates:[]}));
     // Remove only the exact built-in demo entries from older starter data; preserve user-created content.
     const demoTasks=new Set(["数学の課題を進める","英単語を30個覚える","機械工作の予習","英語レポート"]);
     tasks=tasks.filter(t=>!(Number(t.id)>=1&&Number(t.id)<=4&&demoTasks.has(t.title)));
@@ -617,14 +688,14 @@ function closeSheets(){backdrop.classList.remove('open');eventSheet.classList.re
 function openSheet(date,start='09:00',end='10:00',ev=null,occurrence=null){
  closeSheets();sheetEditingId=ev?ev.id:null;sheetEditingOccurrence=occurrence;
  $('#sheetTitle').textContent=ev?'予定を編集':'新しい予定';$('#sheetSave').textContent=ev?'変更を保存':'予定を作成';$('#sheetDelete').style.display=ev?'':'none';
- $('#sheetEventTitle').value=ev?.title||'';$('#sheetEventDate').value=occurrence||ev?.date||date;$('#sheetEventTag').value=ev?.tag||'その他';$('#sheetEventAllDay').checked=!!ev?.allDay;$('#sheetEventStart').value=ev?.start||start;$('#sheetEventEnd').value=ev?.end||end;$('#sheetEventStart').disabled=$('#sheetEventAllDay').checked;$('#sheetEventEnd').disabled=$('#sheetEventAllDay').checked;$('#sheetEventStart').required=!$('#sheetEventAllDay').checked;$('#sheetEventEnd').required=!$('#sheetEventAllDay').checked;$('#sheetEventRepeat').value=ev?.repeat||'none';$('#sheetEventRepeatUntil').value=ev?.repeatUntil||'';$('#sheetEventNote').value=ev?.note||'';
+ $('#sheetEventTitle').value=ev?.title||'';$('#sheetEventDate').value=occurrence||ev?.date||date;$('#sheetEventReminder').value=String(ev?.reminderMinutes??0);$('#sheetEventTag').value=ev?.tag||'その他';$('#sheetEventAllDay').checked=!!ev?.allDay;$('#sheetEventStart').value=ev?.start||start;$('#sheetEventEnd').value=ev?.end||end;$('#sheetEventStart').disabled=$('#sheetEventAllDay').checked;$('#sheetEventEnd').disabled=$('#sheetEventAllDay').checked;$('#sheetEventStart').required=!$('#sheetEventAllDay').checked;$('#sheetEventEnd').required=!$('#sheetEventAllDay').checked;$('#sheetEventRepeat').value=ev?.repeat||'none';$('#sheetEventRepeatUntil').value=ev?.repeatUntil||'';$('#sheetEventNote').value=ev?.note||'';
  backdrop.classList.add('open');eventSheet.classList.add('open');setTimeout(()=>$('#sheetEventTitle').focus(),180);
 }
 function eventById(id){return events.find(x=>String(x.id)===String(id))}
 function showEventDetail(id,occurrence){let ev=eventById(id);if(!ev)return;detailEventId=id;detailOccurrence=occurrence||ev.date;$('#detailTitle').textContent=ev.title;$('#detailMeta').innerHTML=`<span>${detailOccurrence}</span><span>${ev.allDay?'終日':`${ev.start} – ${ev.end}`}</span><span class="tag-dot" style="${tagInline(ev.tag||'その他')}">${esc(ev.tag||'その他')}</span>${ev.repeat&&ev.repeat!=='none'?'<span>繰り返し</span>':''}`;$('#detailNote').textContent=ev.note||'';$('#detailNote').style.display=ev.note?'':'none';backdrop.classList.add('open');detailSheet.classList.add('open')}
 function removeEventOccurrence(id,date){let ev=eventById(id);if(!ev)return;if(ev.repeat&&ev.repeat!=='none'){ev.skipDates=ev.skipDates||[];if(!ev.skipDates.includes(date))ev.skipDates.push(date)}else{events=events.filter(x=>x.id!==ev.id)}closeSheets();renderAll()}
 $('#sheetClose').onclick=$('#sheetCancel').onclick=()=>closeSheets();$('#detailClose').onclick=closeSheets;backdrop.onclick=closeSheets;$('#sheetEventAllDay').onchange=()=>{let disabled=$('#sheetEventAllDay').checked;$('#sheetEventStart').disabled=disabled;$('#sheetEventEnd').disabled=disabled;$('#sheetEventStart').required=!disabled;$('#sheetEventEnd').required=!disabled};
-$('#sheetForm').onsubmit=e=>{e.preventDefault();let title=$('#sheetEventTitle').value.trim(),date=$('#sheetEventDate').value,allDay=$('#sheetEventAllDay').checked,start=allDay?'':$('#sheetEventStart').value,end=allDay?'':$('#sheetEventEnd').value;if(!title||!date||(!allDay&&(!start||!end)))return;if(!allDay&&mins(end)<=mins(start)){alert('終了時刻は開始時刻より後に設定してください。');return}let repeat=$('#sheetEventRepeat').value,repeatUntil=$('#sheetEventRepeatUntil').value;if(repeatUntil&&repeatUntil<date){alert('繰り返し終了日は予定日以降にしてください。');return}let data={title,date,start,end,allDay,tag:$('#sheetEventTag').value,repeat,repeatUntil:repeat==='none'?'':repeatUntil,note:$('#sheetEventNote').value,skipDates:[]};if(sheetEditingId!==null){let old=eventById(sheetEditingId);if(old){if(sheetEditingOccurrence&&old.repeat&&old.repeat!=='none'&&sheetEditingOccurrence!==old.date){old.skipDates=old.skipDates||[];if(!old.skipDates.includes(sheetEditingOccurrence))old.skipDates.push(sheetEditingOccurrence);events.push({...data,id:eventSeq++,repeat:'none',repeatUntil:'',skipDates:[]})}else Object.assign(old,data)}}else events.push({...data,id:eventSeq++,type:'custom'});selectedDate=new Date(date+'T12:00:00');monthDate=new Date(selectedDate.getFullYear(),selectedDate.getMonth(),1);closeSheets();renderAll()};
+$('#sheetForm').onsubmit=e=>{e.preventDefault();let title=$('#sheetEventTitle').value.trim(),date=$('#sheetEventDate').value,allDay=$('#sheetEventAllDay').checked,start=allDay?'':$('#sheetEventStart').value,end=allDay?'':$('#sheetEventEnd').value;if(!title||!date||(!allDay&&(!start||!end)))return;if(!allDay&&mins(end)<=mins(start)){alert('終了時刻は開始時刻より後に設定してください。');return}let repeat=$('#sheetEventRepeat').value,repeatUntil=$('#sheetEventRepeatUntil').value;if(repeatUntil&&repeatUntil<date){alert('繰り返し終了日は予定日以降にしてください。');return}let data={title,date,start,end,allDay,tag:$('#sheetEventTag').value,repeat,repeatUntil:repeat==='none'?'':repeatUntil,note:$('#sheetEventNote').value,reminderMinutes:Number($('#sheetEventReminder').value)||0,skipDates:[]};if(sheetEditingId!==null){let old=eventById(sheetEditingId);if(old){if(sheetEditingOccurrence&&old.repeat&&old.repeat!=='none'&&sheetEditingOccurrence!==old.date){old.skipDates=old.skipDates||[];if(!old.skipDates.includes(sheetEditingOccurrence))old.skipDates.push(sheetEditingOccurrence);events.push({...data,id:eventSeq++,repeat:'none',repeatUntil:'',skipDates:[]})}else Object.assign(old,data)}}else events.push({...data,id:eventSeq++,type:'custom'});selectedDate=new Date(date+'T12:00:00');monthDate=new Date(selectedDate.getFullYear(),selectedDate.getMonth(),1);closeSheets();renderAll()};
 $('#sheetDelete').onclick=()=>{if(sheetEditingId!==null&&confirm('この予定を削除しますか？'))removeEventOccurrence(sheetEditingId,sheetEditingOccurrence||$('#sheetEventDate').value)};
 $('#detailEdit').onclick=()=>{let ev=eventById(detailEventId);if(ev){let id=detailEventId,occ=detailOccurrence;closeSheets();openSheet(occ,ev.start,ev.end,ev,occ)}};
 $('#detailDelete').onclick=()=>{if(confirm('この予定を削除しますか？'))removeEventOccurrence(detailEventId,detailOccurrence)};
