@@ -467,7 +467,7 @@ function initBaseTheme(){
  let saved="green";try{saved=localStorage.getItem("liflow_base_theme")||"green"}catch(e){}
  applyBaseTheme(saved,false);
 }
-initBaseTheme();
+// ベースカラー選択UIは設定画面を開いた時に初期化
 function refreshSettingsPanel(){
  const permission=("Notification" in window)?Notification.permission:"unsupported";
  $("#settingsEmail").textContent=$("#accountEmail")?.textContent||"—";
@@ -476,7 +476,7 @@ function refreshSettingsPanel(){
  $("#settingsEnablePush").textContent=permission==="granted"?"通知設定済み":"通知を有効にする";
  $("#settingsEnablePush").disabled=permission!=="default";
 }
-$("#openSettings").onclick=()=>{refreshSettingsPanel();backdrop.classList.add("open");$("#settingsSheet").classList.add("open")};
+$("#openSettings").onclick=()=>{if(!$("#themeOptions").dataset.initialized){initBaseTheme();$("#themeOptions").dataset.initialized="1"}refreshSettingsPanel();backdrop.classList.add("open");$("#settingsSheet").classList.add("open")};
 $("#settingsClose").onclick=closeSheets;
 $("#settingsEnablePush").onclick=enablePushNotifications;
 $("#settingsLogout").onclick=()=>$("#logoutBtn").click();
