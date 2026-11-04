@@ -105,11 +105,11 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
 .auth-message{font-size:12px;line-height:1.6;padding:10px 12px;border-radius:9px;display:none}.auth-message.show{display:block}.auth-message.error{background:#fff0ed;color:#a44d3b}.auth-message.success{background:#edf5ef;color:#42634f}
 .auth-link{border:0;background:transparent;color:#52745f;text-decoration:underline;font-size:12px;padding:8px}.auth-config-note{font-size:11px;color:#9a7449;background:#faf4eb;padding:10px;border-radius:9px;margin-top:15px;line-height:1.6}
 .account-tools{display:flex;align-items:center;gap:9px}.account-email,.sync-state,.account-tools #enablePushBtn,.account-tools #logoutBtn{display:none}
-.settings-trigger{display:flex;width:42px;height:42px;border:1px solid #dce7df;border-radius:14px;background:linear-gradient(145deg,#f5faf6,#eaf3ed);color:#456b55;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 7px rgba(48,82,59,.08);transition:background .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease}
+.settings-trigger{display:flex;width:42px;height:42px;border:1px solid color-mix(in srgb,var(--green) 28%,white);border-radius:14px;background:var(--green2);color:var(--green);align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 7px color-mix(in srgb,var(--green) 12%,transparent);transition:background .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease}
 .settings-trigger svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round}
-.settings-trigger:hover{background:#e3f0e7;border-color:#c4d9ca;box-shadow:0 3px 10px rgba(48,82,59,.13)}
+.settings-trigger:hover{background:color-mix(in srgb,var(--green) 17%,white);border-color:color-mix(in srgb,var(--green) 42%,white);box-shadow:0 3px 10px color-mix(in srgb,var(--green) 18%,transparent)}
 .settings-trigger:active{transform:scale(.94)}
-.settings-trigger:focus-visible{outline:3px solid rgba(83,133,99,.28);outline-offset:3px}
+.settings-trigger:focus-visible{outline:3px solid color-mix(in srgb,var(--green) 30%,transparent);outline-offset:3px}
 .settings-content{display:grid;gap:14px}.settings-item{padding:13px 14px;border:1px solid var(--line);border-radius:13px;background:#fbfcfa;display:grid;gap:6px}.settings-label{font-size:11px;color:var(--muted)}.settings-value{font-size:14px;font-weight:650;overflow-wrap:anywhere}.settings-logout{width:100%;margin-top:5px}
 @media(max-width:520px){.auth-card{padding:24px 20px}.top{gap:8px;align-items:flex-start}.account-tools{flex-direction:row;align-items:center;gap:7px}}
 
@@ -452,21 +452,22 @@ async function syncPushReminders(){
  }
 }
 const LIFLOW_THEMES=[
- {id:"green",name:"グリーン",main:"#648b78",soft:"#e8f0eb"},
- {id:"blue",name:"ブルー",main:"#5d83b5",soft:"#e9eff8"},
- {id:"purple",name:"パープル",main:"#8a70ad",soft:"#f0ebf7"},
- {id:"pink",name:"ピンク",main:"#c47791",soft:"#f8eaf0"},
- {id:"orange",name:"オレンジ",main:"#c58a4e",soft:"#f7eee2"},
- {id:"red",name:"レッド",main:"#c66d68",soft:"#f8eaea"},
- {id:"yellow",name:"イエロー",main:"#b69a3e",soft:"#f7f2df"},
- {id:"teal",name:"ティール",main:"#4f9994",soft:"#e5f2f0"},
- {id:"navy",name:"ネイビー",main:"#536b91",soft:"#e9edf5"},
- {id:"gray",name:"グレー",main:"#78838b",soft:"#edf0f2"}
+ {id:"green",name:"グリーン",main:"#648b78",soft:"#e8f0eb",background:"#f7f9f7"},
+ {id:"blue",name:"ブルー",main:"#5d83b5",soft:"#e9eff8",background:"#f6f8fc"},
+ {id:"purple",name:"パープル",main:"#8a70ad",soft:"#f0ebf7",background:"#f9f7fb"},
+ {id:"pink",name:"ピンク",main:"#c47791",soft:"#f8eaf0",background:"#fcf7f9"},
+ {id:"orange",name:"オレンジ",main:"#c58a4e",soft:"#f7eee2",background:"#fcf9f5"},
+ {id:"red",name:"レッド",main:"#c66d68",soft:"#f8eaea",background:"#fcf7f7"},
+ {id:"yellow",name:"イエロー",main:"#b69a3e",soft:"#f7f2df",background:"#fbfaf4"},
+ {id:"teal",name:"ティール",main:"#4f9994",soft:"#e5f2f0",background:"#f5faf9"},
+ {id:"navy",name:"ネイビー",main:"#536b91",soft:"#e9edf5",background:"#f6f8fb"},
+ {id:"gray",name:"グレー",main:"#78838b",soft:"#edf0f2",background:"#f7f8f9"}
 ];
 function applyBaseTheme(id,save=true){
  const theme=LIFLOW_THEMES.find(item=>item.id===id)||LIFLOW_THEMES[0];
  document.documentElement.style.setProperty("--green",theme.main);
  document.documentElement.style.setProperty("--green2",theme.soft);
+  document.documentElement.style.setProperty("--bg",theme.background);
  if(save){try{localStorage.setItem("liflow_base_theme",theme.id)}catch(e){}}
  const current=$("#themeCurrent");
  if(current)current.textContent=theme.name;
