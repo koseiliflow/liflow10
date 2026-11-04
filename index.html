@@ -878,6 +878,8 @@ function finishTimer(){
   if(timer.elapsed<=0)return;
   let t=tasks.find(t=>t.id==timer.taskId);
   sessions.unshift({date:key(today),taskId:timer.taskId||null,title:t?t.title:"フリー学習",seconds:timer.elapsed});
+  // A completed focus session also completes its linked task. Free-learning sessions have no task to complete.
+  if(t)t.done=true;
   timer.elapsed=0;timer.start=0;timer.taskId="";
   $("#timerSelect").value="";$("#timerTask").textContent="フリー学習";
   displayTimer();syncTimerControls();renderAll();
