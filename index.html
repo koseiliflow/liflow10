@@ -398,8 +398,7 @@ async function syncPushReminders(){
   for(const item of taskDates){
    if(!item.date)continue;
    const scheduledFor=new Date(item.date+"T07:00:00");
-   // If registered or moved to today after 7:00, send as soon as possible.
-   if(scheduledFor<=now&&item.date===key(now))scheduledFor.setTime(now.getTime()+5000);
+   // Do not reschedule a past 7:00 reminder on every background save.
    if(scheduledFor<=now)continue;
    rows.push({
     user_id:userId,
