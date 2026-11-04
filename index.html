@@ -378,6 +378,7 @@ async function syncPushReminders(){
     scheduledFor=startAt;
    }else if(reminderMinutes===-2){
     scheduledFor=new Date(date+"T07:00:00");
+    if(scheduledFor>startAt)scheduledFor=startAt;
    }else{
     scheduledFor=new Date(startAt.getTime()-reminderMinutes*60000);
    }
