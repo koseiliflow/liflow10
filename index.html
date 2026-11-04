@@ -648,10 +648,14 @@ function renderAll(){saveData();renderHome();renderTasks();renderDay();renderMon
 $("#todayLabel").textContent=fmtDate(today);
 function switchView(name){$$(".view").forEach(v=>v.classList.toggle("show",v.id===name));$$(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.view===name));$("#pageTitle").textContent=({home:"今日も、いい一日に。",tasks:"タスクを整理する。",day:"時間を、デザインする。",month:"先の予定まで見渡す。",focus:"目の前のことに、集中する。"})[name];if(name==="day")renderDay()}
 $$(".nav button").forEach(b=>b.onclick=()=>switchView(b.dataset.view));$$("[data-go]").forEach(b=>b.onclick=()=>switchView(b.dataset.go));
-function renderHome(){let done=tasks.filter(t=>t.done).length;$("#homeDone").textContent=`${done}/${tasks.length}`;$("#homePct").textContent=`${tasks.length?Math.round(done/tasks.length*100):0}% 完了`;$("#homeEvents").textContent=getEventsForDate(key(today)).length;let sec=sessions.filter(s=>s.date===key(today)).reduce((a,s)=>a+s.seconds,0);$("#homeStudy").textContent=`${Math.floor(sec/60)}分`;
+function renderHome(){$("#homeEvents").textContent=getEventsForDate(key(today)).length;let sec=sessions.filter(s=>s.date===key(today)).reduce((a,s)=>a+s.seconds,0);$("#homeStudy").textContent=`${Math.floor(sec/60)}分`;
 const todayKey=key(today);
 const plannedToday=tasks.filter(t=>t.plannedDate===todayKey);
 const dueToday=tasks.filter(t=>t.dueDate===todayKey&&!t.done&&!plannedToday.some(p=>String(p.id)===String(t.id)));
+const homeTodayTasks=[...plannedToday,...dueToday];
+const done=homeTodayTasks.filter(t=>t.done).length;
+$("#homeDone").textContent=`${done}/${homeTodayTasks.length}`;
+$("#homePct").textContent=`${homeTodayTasks.length?Math.round(done/homeTodayTasks.length*100):0}% 完了`;
 const taskRows=items=>items.map(t=>`<div class="taskrow"><input type="checkbox" data-check="${t.id}" ${t.done?"checked":""}><div class="taskname ${t.done?"done":""}">${esc(t.title)}<div class="task-meta">${t.plannedDate?`実施予定 ${shortDate(t.plannedDate)}${t.allDay?"（終日）":""}`:""}${t.dueDate?`締切 ${shortDate(t.dueDate)}`:""}</div></div><span class="tag-dot" style="${tagInline(t.tag)}">${esc(t.tag||"その他")}</span>${t.done?'<span class="tag">完了</span>':''}</div>`).join("");
 $("#homeTasks").innerHTML=`<div class="home-task-section"><h3>実施予定のタスク · ${plannedToday.length}件</h3>${taskRows(plannedToday)||'<div class="empty">今日が実施予定日のタスクはありません</div>'}</div><div class="home-task-section"><h3>〆切のタスク · ${dueToday.length}件</h3>${taskRows(dueToday)||'<div class="empty">今日が〆切の未完了タスクはありません</div>'}</div>`;
 $("#homeSchedule").innerHTML=getEventsForDate(key(today)).sort((a,b)=>a.start.localeCompare(b.start)).map(e=>`<div class="event"><div class="eventtime">${e.start}</div><div class="eventbody" style="${tagInline(e.tag)}"><b>${esc(e.title)}${e.isRecurring?'<span class="repeat-chip">繰り返し</span>':''}</b><small>${e.start} – ${e.end} · ${esc(e.tag||"その他")}</small></div></div>`).join("")||'<div class="empty">予定はありません</div>';
