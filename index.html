@@ -247,6 +247,10 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
 #timerStop:disabled{background:var(--green2);color:var(--accent-ink);border:1px solid var(--accent-border);opacity:.8}
 #timerStop:not(:disabled):hover{background:color-mix(in srgb,var(--green) 88%,#17231d)}
 
+
+.home-focus-btn{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;padding:6px 9px;border-color:var(--accent-border);color:var(--accent-ink)}
+.home-focus-btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.home-focus-btn:hover{background:var(--accent-tint)}
 </style>
 </head>
 <body>
@@ -656,10 +660,10 @@ const homeTodayTasks=[...plannedToday,...dueToday];
 const done=homeTodayTasks.filter(t=>t.done).length;
 $("#homeDone").textContent=`${done}/${homeTodayTasks.length}`;
 $("#homePct").textContent=`${homeTodayTasks.length?Math.round(done/homeTodayTasks.length*100):0}% 完了`;
-const taskRows=items=>items.map(t=>`<div class="taskrow"><input type="checkbox" data-check="${t.id}" ${t.done?"checked":""}><div class="taskname ${t.done?"done":""}">${esc(t.title)}<div class="task-meta">${t.plannedDate?`実施予定 ${shortDate(t.plannedDate)}${t.allDay?"（終日）":""}`:""}${t.dueDate?`締切 ${shortDate(t.dueDate)}`:""}</div></div><span class="tag-dot" style="${tagInline(t.tag)}">${esc(t.tag||"その他")}</span>${t.done?'<span class="tag">完了</span>':''}</div>`).join("");
+const taskRows=items=>items.map(t=>`<div class="taskrow"><input type="checkbox" data-check="${t.id}" ${t.done?"checked":""}><div class="taskname ${t.done?"done":""}">${esc(t.title)}<div class="task-meta">${t.plannedDate?`実施予定 ${shortDate(t.plannedDate)}${t.allDay?"（終日）":""}`:""}${t.dueDate?`締切 ${shortDate(t.dueDate)}`:""}</div></div><span class="tag-dot" style="${tagInline(t.tag)}">${esc(t.tag||"その他")}</span>${t.done?'<span class="tag">完了</span>':''}<button type="button" class="btn light small home-focus-btn" data-focus-task="${t.id}" aria-label="${esc(t.title)}を計測" title="このタスクを計測"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2.5 1.5M9 2h6M12 2v3M19 6l1.5-1.5"></path></svg><span>計測</span></button></div>`).join("");
 $("#homeTasks").innerHTML=`<div class="home-task-section"><h3>実施予定のタスク · ${plannedToday.length}件</h3>${taskRows(plannedToday)||'<div class="empty">今日が実施予定日のタスクはありません</div>'}</div><div class="home-task-section"><h3>〆切のタスク · ${dueToday.length}件</h3>${taskRows(dueToday)||'<div class="empty">今日が〆切の未完了タスクはありません</div>'}</div>`;
 $("#homeSchedule").innerHTML=getEventsForDate(key(today)).sort((a,b)=>a.start.localeCompare(b.start)).map(e=>`<div class="event"><div class="eventtime">${e.start}</div><div class="eventbody" style="${tagInline(e.tag)}"><b>${esc(e.title)}${e.isRecurring?'<span class="repeat-chip">繰り返し</span>':''}</b><small>${e.start} – ${e.end} · ${esc(e.tag||"その他")}</small></div></div>`).join("")||'<div class="empty">予定はありません</div>';
-$$("[data-check]").forEach(c=>c.onchange=()=>{let t=tasks.find(x=>x.id==c.dataset.check);if(t)t.done=c.checked;renderAll()})}
+$$("[data-check]").forEach(c=>c.onchange=()=>{let t=tasks.find(x=>x.id==c.dataset.check);if(t)t.done=c.checked;renderAll()});$$("[data-focus-task]").forEach(b=>b.onclick=()=>{const t=tasks.find(x=>String(x.id)===String(b.dataset.focusTask));if(!t)return;if(timer.running||timer.elapsed>0){switchView("focus");return;}timer.taskId=String(t.id);$("#timerSelect").value=String(t.id);$("#timerTask").textContent=t.title;switchView("focus");saveData();syncTimerControls()})}
 function actualSecondsForTask(task){return sessions.reduce((sum,s)=>sum+((s.taskId!=null&&String(s.taskId)===String(task.id))||(s.taskId==null&&s.title===task.title)?Number(s.seconds)||0:0),0)}
 function formatElapsed(total){let sec=Math.max(0,Math.floor(Number(total)||0)),h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=sec%60;return h>0?`${h}時間${String(m).padStart(2,"0")}分${String(s).padStart(2,"0")}秒`:`${m}分${String(s).padStart(2,"0")}秒`}
 function renderTasks(){
