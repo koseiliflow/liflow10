@@ -105,7 +105,11 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
 .auth-message{font-size:12px;line-height:1.6;padding:10px 12px;border-radius:9px;display:none}.auth-message.show{display:block}.auth-message.error{background:#fff0ed;color:#a44d3b}.auth-message.success{background:#edf5ef;color:#42634f}
 .auth-link{border:0;background:transparent;color:#52745f;text-decoration:underline;font-size:12px;padding:8px}.auth-config-note{font-size:11px;color:#9a7449;background:#faf4eb;padding:10px;border-radius:9px;margin-top:15px;line-height:1.6}
 .account-tools{display:flex;align-items:center;gap:9px}.account-email,.sync-state,.account-tools #enablePushBtn,.account-tools #logoutBtn{display:none}
-.settings-trigger{display:flex;width:40px;height:40px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);font-size:21px;align-items:center;justify-content:center;cursor:pointer}
+.settings-trigger{display:flex;width:42px;height:42px;border:1px solid #dce7df;border-radius:14px;background:linear-gradient(145deg,#f5faf6,#eaf3ed);color:#456b55;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 7px rgba(48,82,59,.08);transition:background .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease}
+.settings-trigger svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round}
+.settings-trigger:hover{background:#e3f0e7;border-color:#c4d9ca;box-shadow:0 3px 10px rgba(48,82,59,.13)}
+.settings-trigger:active{transform:scale(.94)}
+.settings-trigger:focus-visible{outline:3px solid rgba(83,133,99,.28);outline-offset:3px}
 .settings-content{display:grid;gap:14px}.settings-item{padding:13px 14px;border:1px solid var(--line);border-radius:13px;background:#fbfcfa;display:grid;gap:6px}.settings-label{font-size:11px;color:var(--muted)}.settings-value{font-size:14px;font-weight:650;overflow-wrap:anywhere}.settings-logout{width:100%;margin-top:5px}
 @media(max-width:520px){.auth-card{padding:24px 20px}.top{gap:8px;align-items:flex-start}.account-tools{flex-direction:row;align-items:center;gap:7px}}
 
@@ -226,7 +230,7 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
 <div class="sidebar-note">小さな積み重ねが、<br>毎日の流れをつくる。</div>
 </aside>
 <main>
-<header class="top"><div><div class="eyebrow liflow-top-logo">Liflow<span>.</span></div><h1 id="pageTitle">今日も、いい一日に。</h1></div><div class="account-tools"><span class="account-email" id="accountEmail"></span><span class="sync-state" id="syncState"></span><button class="btn light small" id="enablePushBtn" type="button">通知を有効にする</button><button class="btn ghost small" id="logoutBtn" type="button">ログアウト</button><button class="settings-trigger" id="openSettings" type="button" aria-label="設定を開く" title="設定">⚙</button><div class="datepill" id="todayLabel"></div></div></header>
+<header class="top"><div><div class="eyebrow liflow-top-logo">Liflow<span>.</span></div><h1 id="pageTitle">今日も、いい一日に。</h1></div><div class="account-tools"><span class="account-email" id="accountEmail"></span><span class="sync-state" id="syncState"></span><button class="btn light small" id="enablePushBtn" type="button">通知を有効にする</button><button class="btn ghost small" id="logoutBtn" type="button">ログアウト</button><button class="settings-trigger" id="openSettings" type="button" aria-label="設定を開く" title="設定"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.25a3.75 3.75 0 1 0 0 7.5 3.75 3.75 0 0 0 0-7.5Z"/><path d="m19.4 15 .05.05a1.8 1.8 0 0 1-2.55 2.55l-.05-.05a1.8 1.8 0 0 0-3.07 1.27v.15a1.8 1.8 0 0 1-3.6 0v-.08a1.8 1.8 0 0 0-3.07-1.27l-.05.05a1.8 1.8 0 1 1-2.55-2.55l.05-.05a1.8 1.8 0 0 0-1.27-3.07h-.15a1.8 1.8 0 0 1 0-3.6h.08a1.8 1.8 0 0 0 1.27-3.07l-.05-.05a1.8 1.8 0 1 1 2.55-2.55l.05.05a1.8 1.8 0 0 0 3.07-1.27v-.15a1.8 1.8 0 0 1 3.6 0v.08a1.8 1.8 0 0 0 3.07 1.27l.05-.05a1.8 1.8 0 1 1 2.55 2.55l-.05.05a1.8 1.8 0 0 0 1.27 3.07h.15a1.8 1.8 0 0 1 0 3.6h-.08A1.8 1.8 0 0 0 19.4 15Z"/></svg></button><div class="datepill" id="todayLabel"></div></div></header>
 <section id="home" class="view show">
 <div class="stats">
 <div class="stat"><small>今日のタスク完了</small><strong id="homeDone">0/0</strong><em id="homePct">0% 完了</em></div>
