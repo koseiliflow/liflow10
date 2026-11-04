@@ -362,7 +362,7 @@ function updatePushButton(){
 async function syncPushReminders(){
  if(!currentUser||!cloudReady||!window.liflowSupabase)return;
  const userId=currentUser.id;
- const {error:deleteError}=await window.liflowSupabase.from("push_reminders").delete().eq("user_id",userId).eq("status","pending");
+ const {error:deleteError}=await window.liflowSupabase.from("push_reminders").delete().eq("user_id",userId).in("status",["pending","failed"]);
  if(deleteError)throw deleteError;
  const now=new Date(),rows=[];
  for(const ev of events){
