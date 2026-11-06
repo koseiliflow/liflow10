@@ -273,6 +273,14 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
 .home-focus-btn{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;padding:6px;border-color:var(--accent-border);color:var(--accent-ink);min-width:32px;min-height:32px}.home-focus-btn.icon-only{width:32px;height:32px;padding:6px;flex:none}
 .home-focus-btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .home-focus-btn:hover{background:var(--accent-tint)}
+
+/* Requested minimal header and mobile task drawer layout */
+.top #pageTitle{display:none!important}
+.sidebar .sidebar-note{display:none!important}
+@media(max-width:600px){
+ #day .task-pool,
+ #month .month-task-pool{display:none!important}
+}
 </style>
 </head>
 <body>
@@ -309,7 +317,7 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
 <button data-view="tasks"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4.5" width="14" height="17" rx="2"/><path d="M9 4.5V3h6v1.5M8.5 11l2 2 5-5M8.5 17h7"/></svg><span class="label">タスク</span></button>
 <button data-view="focus"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M22 12h-3M12 22v-3M2 12h3"/></svg><span class="label">フォーカス</span></button>
 </nav>
-<div class="sidebar-note">小さな積み重ねが、<br>毎日の流れをつくる。</div>
+
 </aside>
 <main>
 <header class="top"><div><div class="eyebrow liflow-top-logo">Liflow<span>.</span></div><h1 id="pageTitle">今日も、いい一日に。</h1></div><div class="account-tools"><span class="account-email" id="accountEmail"></span><span class="sync-state" id="syncState"></span><button class="btn light small" id="enablePushBtn" type="button">通知を有効にする</button><button class="btn ghost small" id="logoutBtn" type="button">ログアウト</button><button class="settings-trigger" id="openSettings" type="button" aria-label="設定を開く" title="設定"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.25a3.75 3.75 0 1 0 0 7.5 3.75 3.75 0 0 0 0-7.5Z"/><path d="m19.4 15 .05.05a1.8 1.8 0 0 1-2.55 2.55l-.05-.05a1.8 1.8 0 0 0-3.07 1.27v.15a1.8 1.8 0 0 1-3.6 0v-.08a1.8 1.8 0 0 0-3.07-1.27l-.05.05a1.8 1.8 0 1 1-2.55-2.55l.05-.05a1.8 1.8 0 0 0-1.27-3.07h-.15a1.8 1.8 0 0 1 0-3.6h.08a1.8 1.8 0 0 0 1.27-3.07l-.05-.05a1.8 1.8 0 1 1 2.55-2.55l.05.05a1.8 1.8 0 0 0 3.07-1.27v-.15a1.8 1.8 0 0 1 3.6 0v.08a1.8 1.8 0 0 0 3.07 1.27l.05-.05a1.8 1.8 0 1 1 2.55 2.55l-.05.05a1.8 1.8 0 0 0 1.27 3.07h.15a1.8 1.8 0 0 1 0 3.6h-.08A1.8 1.8 0 0 0 19.4 15Z"/></svg></button><div class="datepill" id="todayLabel"></div></div></header>
