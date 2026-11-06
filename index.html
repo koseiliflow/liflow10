@@ -32,7 +32,7 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
 @media(max-width:1100px){.schedule-form{grid-template-columns:repeat(3,minmax(0,1fr))}.schedule-form .wide{grid-column:span 2}}
 @media(max-width:600px){.schedule-form{grid-template-columns:repeat(2,minmax(0,1fr))}.schedule-form .wide{grid-column:span 2}.repeat-until{flex-wrap:wrap}}
 @media(max-width:850px){.sidebar{width:70px;padding:22px 8px}.brand{font-size:0;padding:0;text-align:center}.brand:after{content:"L.";font-size:22px}.sub,.nav .label,.sidebar-note{display:none}.nav button{justify-content:center;padding:12px 5px}.nav i{font-size:18px}main{padding:23px 16px}.grid{grid-template-columns:1fr}.day-layout{grid-template-columns:1fr}.task-pool{min-height:0}.stats{gap:7px}.stat{padding:12px}.stat strong{font-size:22px}}
-@media(max-width:520px){.sidebar{position:fixed;z-index:5;bottom:0;left:0;right:0;width:auto;height:62px;padding:5px 8px;border-right:0;border-top:1px solid var(--line);display:block}.brand,.sub,.sidebar-note{display:none}.nav{display:flex;justify-content:space-around}.nav button{display:flex;flex-direction:column;justify-content:center;gap:3px;font-size:10px;padding:4px 5px;min-width:58px;min-height:54px}.nav .label{display:block}.nav i{font-size:24px;line-height:1.15;width:auto;font-weight:600}main{padding:22px 13px 85px}.top h1{font-size:23px}.datepill{font-size:11px}.stats{grid-template-columns:repeat(3,1fr)}.stat strong{font-size:19px}.daycell{min-height:72px;padding:5px}.calitem{font-size:9px}}
+@media(max-width:520px){#home .stats{gap:6px}#home .stat{padding:9px 7px;border-radius:12px}#home .stat small{font-size:10px;line-height:1.3}#home .stat strong{font-size:17px;margin-top:3px}#home .stat em{font-size:9px}#home .grid>.card{padding:14px;border-radius:14px}.sidebar{position:fixed;z-index:5;bottom:0;left:0;right:0;width:auto;height:62px;padding:5px 8px;border-right:0;border-top:1px solid var(--line);display:block}.brand,.sub,.sidebar-note{display:none}.nav{display:flex;justify-content:space-around}.nav button{display:flex;flex-direction:column;justify-content:center;gap:3px;font-size:10px;padding:4px 5px;min-width:58px;min-height:54px}.nav .label{display:block}.nav i{font-size:24px;line-height:1.15;width:auto;font-weight:600}main{padding:22px 13px 85px}.top h1{font-size:23px}.datepill{font-size:11px}.stats{grid-template-columns:repeat(3,1fr)}.stat strong{font-size:19px}.daycell{min-height:72px;padding:5px}.calitem{font-size:9px}}
 
 /* Prototype 0.4 additions */
 .task-form{display:flex;gap:9px;flex-wrap:wrap;align-items:end;margin-bottom:10px}
@@ -363,7 +363,7 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
 </section>
 <section id="focus" class="view">
 <div class="grid">
-<div class="card timerbox"><div class="eyebrow">FOCUS SESSION</div><h2 id="timerTask">フリー学習</h2><div class="timer" id="timerDisplay">00:00:00</div><div class="muted" id="timerState">集中する準備はできましたか？</div><div class="timer-controls" style="margin-top:20px"><button class="btn" id="timerStart">計測開始</button><button class="btn light" id="timerPause" disabled>一時停止</button><button class="btn ghost" id="timerStop" disabled>終了して記録</button></div><div style="margin-top:18px"><select class="field" id="timerSelect" style="max-width:260px"><option value="">フリー学習として記録</option></select></div></div>
+<div class="card timerbox"><div class="eyebrow">FOCUS SESSION</div><h2 id="timerTask">フリー学習</h2><div class="timer" id="timerDisplay">00:00:00</div><div class="muted" id="timerState">目標時間：未設定</div><div class="timer-controls" style="margin-top:20px"><button class="btn" id="timerStart">計測開始</button><button class="btn light" id="timerPause" disabled>一時停止</button><button class="btn ghost" id="timerStop" disabled>終了して記録</button></div><div style="margin-top:18px"><select class="field" id="timerSelect" style="max-width:260px"><option value="">フリー学習として記録</option></select></div></div>
 <div class="card"><h2>今日の計測履歴</h2><div id="sessionList"></div></div>
 </div>
 </section>
@@ -619,7 +619,16 @@ const TAG_STYLES={
 let selectedTaskTag = "すべて";
 let taskTags=["勉強","学校","部活","プライベート","その他"];
 let scheduleTags=["学校","勉強","部活","プライベート","その他"];
- let taskPoolTagFilter="すべて";
+ function taskTagIsVisible(task){return !taskPoolTagFilters.length||taskPoolTagFilters.includes(task.tag||"その他")}
+function renderTaskTagPicker(containerId,tags,rerender){
+ const root=$("#"+containerId);if(!root)return;
+ taskPoolTagFilters=taskPoolTagFilters.filter(tag=>tags.includes(tag));
+ const options=["すべて",...tags];
+ root.innerHTML='<button type="button" class="task-tag-icon" aria-label="表示するタグを選択" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.59 13.41 11 3.83A2.8 2.8 0 0 0 9 3H4a1 1 0 0 0-1 1v5a2.8 2.8 0 0 0 .83 2l9.58 9.59a2.25 2.25 0 0 0 3.18 0l4-4a2.25 2.25 0 0 0 0-3.18Z"/><circle cx="7.5" cy="7.5" r="1"/></svg></button><div class="task-tag-menu">'+options.map(tag=>'<button type="button" class="task-tag-option '+((tag==="すべて"?!taskPoolTagFilters.length:taskPoolTagFilters.includes(tag))?'active':'')+'" data-task-tag-filter="'+esc(tag)+'">'+esc(tag)+'</button>').join('')+'</div>';
+ const toggle=root.querySelector(".task-tag-icon");toggle.onclick=()=>{const open=root.classList.toggle("open");toggle.setAttribute("aria-expanded",String(open))};
+ $("#"+containerId+" [data-task-tag-filter]").forEach(btn=>btn.onclick=()=>{const tag=btn.dataset.taskTagFilter;if(tag==="すべて")taskPoolTagFilters=[];else if(taskPoolTagFilters.includes(tag))taskPoolTagFilters=taskPoolTagFilters.filter(x=>x!==tag);else taskPoolTagFilters.push(tag);rerender()});
+}
+let taskPoolTagFilters=[];
 let customTagStyles={};
 const TAG_PALETTE=["#E8EEF9","#DCE8F8","#DCEFF2","#D9EFE8","#E3F0D8","#F1F0D5","#F8EFD8","#FBE6D8","#F8DFD9","#F6DFE8","#F0E1F2","#E9E1F7","#DCDFF3","#CFE5E8","#CFE8DD","#E8E8E8","#D9DEE2","#EADCCB","#F0E2C9","#DCE6D9"];
 let tasks=[];
@@ -694,7 +703,7 @@ $$(".nav button").forEach(b=>b.onclick=()=>switchView(b.dataset.view));$$("[data
 function renderHome(){$("#homeEvents").textContent=getEventsForDate(key(today)).length;let sec=sessions.filter(s=>s.date===key(today)).reduce((a,s)=>a+s.seconds,0);$("#homeStudy").textContent=`${Math.floor(sec/60)}分`;
 const todayKey=key(today);
 const plannedToday=tasks.filter(t=>t.plannedDate===todayKey);
-const dueToday=tasks.filter(t=>t.dueDate===todayKey&&!t.done&&!plannedToday.some(p=>String(p.id)===String(t.id)));
+const dueToday=tasks.filter(t=>t.dueDate&&t.dueDate<=todayKey&&!t.done&&!plannedToday.some(p=>String(p.id)===String(t.id)));
 const homeTodayTasks=[...plannedToday,...dueToday];
 const done=homeTodayTasks.filter(t=>t.done).length;
 $("#homeDone").textContent=`${done}/${homeTodayTasks.length}`;
@@ -702,7 +711,7 @@ $("#homePct").textContent=`${homeTodayTasks.length?Math.round(done/homeTodayTask
 const taskRows=items=>items.map(t=>`<div class="taskrow"><input type="checkbox" data-check="${t.id}" ${t.done?"checked":""}><div class="taskname ${t.done?"done":""}">${esc(t.title)}<div class="task-meta">${t.plannedDate?`実施予定 ${shortDate(t.plannedDate)}${t.allDay?"（終日）":""}`:""}${t.dueDate?`締切 ${shortDate(t.dueDate)}`:""}</div></div><span class="tag-dot" style="${tagInline(t.tag)}">${esc(t.tag||"その他")}</span>${t.done?'<span class="tag">完了</span>':''}<button type="button" class="btn light small home-focus-btn icon-only" data-focus-task="${t.id}" aria-label="${esc(t.title)}を計測" title="このタスクを計測"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2.5 1.5M9 2h6M12 2v3M19 6l1.5-1.5"></path></svg></button></div>`).join("");
 $("#homeTasks").innerHTML=`<div class="home-task-section"><h3>実施予定のタスク · ${plannedToday.length}件</h3>${taskRows(plannedToday)||'<div class="empty">今日が実施予定日のタスクはありません</div>'}</div><div class="home-task-section"><h3>〆切のタスク · ${dueToday.length}件</h3>${taskRows(dueToday)||'<div class="empty">今日が〆切の未完了タスクはありません</div>'}</div>`;
 $("#homeSchedule").innerHTML=getEventsForDate(key(today)).sort((a,b)=>a.start.localeCompare(b.start)).map(e=>`<div class="event"><div class="eventtime">${e.start}</div><div class="eventbody" style="${tagInline(e.tag)}"><b>${esc(e.title)}${e.isRecurring?'<span class="repeat-chip">繰り返し</span>':''}</b><small>${e.start} – ${e.end} · ${esc(e.tag||"その他")}</small></div></div>`).join("")||'<div class="empty">予定はありません</div>';
-$$("[data-check]").forEach(c=>c.onchange=()=>{let t=tasks.find(x=>x.id==c.dataset.check);if(t)t.done=c.checked;renderAll()});$$("[data-focus-task]").forEach(b=>b.onclick=()=>{const t=tasks.find(x=>String(x.id)===String(b.dataset.focusTask));if(!t)return;if(timer.running||timer.elapsed>0){switchView("focus");return;}timer.taskId=String(t.id);$("#timerSelect").value=String(t.id);$("#timerTask").textContent=t.title;switchView("focus");saveData();syncTimerControls()})}
+$$("[data-check]").forEach(c=>c.onchange=()=>{let t=tasks.find(x=>x.id==c.dataset.check);if(t)t.done=c.checked;renderAll()});$$("[data-focus-task]").forEach(b=>b.onclick=()=>{const t=tasks.find(x=>String(x.id)===String(b.dataset.focusTask));if(!t)return;if(timer.running||timer.elapsed>0){switchView("focus");return;}timer.taskId=String(t.id);$("#timerSelect").value=String(t.id);$("#timerTask").textContent=t.title;switchView("focus");syncTimerControls();saveData()})}
 function actualSecondsForTask(task){return sessions.reduce((sum,s)=>sum+((s.taskId!=null&&String(s.taskId)===String(task.id))||(s.taskId==null&&s.title===task.title)?Number(s.seconds)||0:0),0)}
 function formatElapsed(total){let sec=Math.max(0,Math.floor(Number(total)||0)),h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=sec%60;return h>0?`${h}時間${String(m).padStart(2,"0")}分${String(s).padStart(2,"0")}秒`:`${m}分${String(s).padStart(2,"0")}秒`}
 function renderTasks(){
@@ -895,13 +904,14 @@ function renderMonth(){let y=monthDate.getFullYear(),m=monthDate.getMonth();$("#
 $("#prevMonth").onclick=()=>{monthDate.setMonth(monthDate.getMonth()-1);saveData();renderMonth()};$("#nextMonth").onclick=()=>{monthDate.setMonth(monthDate.getMonth()+1);saveData();renderMonth()};
 function renderTimerOptions(){let val=$("#timerSelect").value;$("#timerSelect").innerHTML='<option value="">フリー学習として記録</option>'+tasks.map(t=>`<option value="${t.id}">${esc(t.title)}</option>`).join("");$("#timerSelect").value=val}
 function displayTimer(){let sec=timer.elapsed+(timer.running?Math.floor((Date.now()-timer.start)/1000):0);$("#timerDisplay").textContent=`${String(Math.floor(sec/3600)).padStart(2,"0")}:${String(Math.floor(sec%3600/60)).padStart(2,"0")}:${String(sec%60).padStart(2,"0")}`}
-$("#timerSelect").onchange=()=>{if(timer.running||timer.elapsed>0)return;timer.taskId=$("#timerSelect").value;let t=tasks.find(t=>t.id==timer.taskId);$("#timerTask").textContent=t?t.title:"フリー学習";saveData()};
+$("#timerSelect").onchange=()=>{if(timer.running||timer.elapsed>0)return;timer.taskId=$("#timerSelect").value;let t=tasks.find(t=>t.id==timer.taskId);$("#timerTask").textContent=t?t.title:"フリー学習";syncTimerControls();saveData()};
 function syncTimerControls(){
   $("#timerStart").disabled=timer.running;
   $("#timerStart").textContent=timer.elapsed>0?"計測を再開":"計測開始";
   $("#timerPause").disabled=!timer.running;
   $("#timerStop").disabled=timer.elapsed===0&&!timer.running;
-  $("#timerState").textContent=timer.running?"集中しています":timer.elapsed>0?"一時停止中":"集中する準備はできましたか？";
+  const selected=tasks.find(t=>String(t.id)===String(timer.taskId||$("#timerSelect").value));
+  $("#timerState").textContent=selected&&Number(selected.minutes)>0?"目標時間："+selected.minutes+"分":"目標時間：未設定";
 }
 function startTimer(){
   if(timer.running)return;
@@ -930,7 +940,7 @@ function finishTimer(){
 $("#timerStart").onclick=startTimer;
 $("#timerPause").onclick=pauseTimer;
 $("#timerStop").onclick=finishTimer;
-function renderSessions(){$("#sessionList").innerHTML=sessions.map(s=>`<div class="taskrow"><div class="taskname">${esc(s.title)}<div class="muted" style="font-size:11px">${s.date}</div></div><b style="white-space:nowrap;font-variant-numeric:tabular-nums">${formatElapsed(s.seconds)}</b></div>`).join("")||'<div class="empty">計測履歴はまだありません</div>'}
+function renderSessions(){const todaySessions=sessions.filter(s=>s.date===key(today));$("#sessionList").innerHTML=todaySessions.map(s=>`<div class="taskrow"><div class="taskname">${esc(s.title)}<div class="muted" style="font-size:11px">${s.date}</div></div><b style="white-space:nowrap;font-variant-numeric:tabular-nums">${formatElapsed(s.seconds)}</b></div>`).join("")||'<div class="empty">計測履歴はまだありません</div>'}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 
 // 0.5: long-press creation, event detail/edit/delete, and drag-to-reschedule.
@@ -984,13 +994,10 @@ function getTaskAllDayEntries(dateString){
 function renderDay(){
  const d=key(selectedDate),dayStart=5*60,dayEnd=24*60;$('#dayTitle').textContent=fmtDate(selectedDate);$('#eventDate').value=d;let placed=getEventsForDate(d);
  const unplacedTasks=tasks.filter(t=>!t.done&&!placed.some(e=>String(e.taskId)===String(t.id)));
- const poolTags=['すべて',...new Set([...taskTags,...unplacedTasks.map(t=>t.tag||'その他')])];
- if(taskPoolTagFilter!=='すべて'&&!poolTags.includes(taskPoolTagFilter))taskPoolTagFilter='すべて';
- $('#taskPoolFilters').innerHTML='<button type="button" class="task-tag-icon" aria-label="表示するタグを選択" aria-expanded="false">🏷️</button><div class="task-tag-menu">'+poolTags.map(tag=>'<button type="button" class="task-tag-option '+(tag===taskPoolTagFilter?'active':'')+'" data-pool-tag="'+esc(tag)+'">'+esc(tag)+'</button>').join('')+'</div>';
- const tagToggle=$('#taskPoolFilters .task-tag-icon');tagToggle.onclick=()=>{const open=$('#taskPoolFilters').classList.toggle('open');tagToggle.setAttribute('aria-expanded',String(open))};
- const shownTasks=taskPoolTagFilter==='すべて'?unplacedTasks:unplacedTasks.filter(t=>(t.tag||'その他')===taskPoolTagFilter);
+ const poolTags=[...new Set([...taskTags,...unplacedTasks.map(t=>t.tag||'その他')])];
+ renderTaskTagPicker('taskPoolFilters',poolTags,renderDay);
+ const shownTasks=unplacedTasks.filter(taskTagIsVisible);
  $('#taskPool').innerHTML=shownTasks.map(t=>`<div class="draggable" draggable="true" data-drag="${t.id}"><b>${esc(t.title)}</b><small>${t.minutes}分 · ${t.priority}優先 · ${esc(t.tag||'その他')}</small></div>`).join('')||'<div class="empty">該当する未配置タスクはありません</div>';
- $$('[data-pool-tag]').forEach(btn=>btn.onclick=()=>{taskPoolTagFilter=btn.dataset.poolTag;renderDay()});
  $$('[data-drag]').forEach(el=>el.ondragstart=e=>{let t=tasks.find(x=>String(x.id)===String(el.dataset.drag));timelineDragDuration=t?.minutes||60;e.dataTransfer.setData('text/plain','task:'+el.dataset.drag);el.ondragend=hideTimelineDragPreview});let hourLines='';for(let h=5;h<24;h++)hourLines+=`<div class="hour-line"><time>${String(h).padStart(2,'0')}:00</time><div></div></div>`;
  let allDayEvents=placed.filter(e=>e.allDay);let allDayTasks=getTaskAllDayEntries(d);$('#allDayEvents').innerHTML=[...allDayEvents.map(ev=>`<div class="all-day-event" data-event-card="${ev.sourceId}" data-event-date="${d}" style="${tagInline(ev.tag)}"><b>${esc(ev.title)}</b><span class="all-day-label">終日</span><small>${esc(ev.tag||'その他')}</small></div>`),...allDayTasks.map(t=>`<div class="all-day-event" style="${tagInline(t.tag)}"><b>${esc(t.title)}</b><span class="all-day-label">終日タスク · ${t._calendarLabel}</span><small>${esc(t.tag||'その他')}</small></div>`)].join('')||'<div class="muted" style="font-size:11px;padding:7px 0">終日の予定はありません</div>';let visible=placed.filter(e=>!e.allDay).map(e=>({...e,_s:Math.max(dayStart,mins(e.start)),_e:Math.min(dayEnd,mins(e.end))})).filter(e=>e._e>e._s).sort((a,b)=>a._s-b._s||a._e-b._e);let groups=[];for(const ev of visible){let g=groups[groups.length-1];if(!g||ev._s>=g.end){g={items:[],end:ev._e};groups.push(g)}g.items.push(ev);g.end=Math.max(g.end,ev._e)}for(const g of groups){let lanes=[];for(const ev of g.items){let lane=lanes.findIndex(x=>x<=ev._s);if(lane<0)lane=lanes.length;lanes[lane]=ev._e;ev._lane=lane}for(const ev of g.items)ev._lanes=lanes.length}
  let html=visible.map(ev=>{let top=ev._s-dayStart,height=ev._e-ev._s,w=100/ev._lanes,left=w*ev._lane,c=tagStyle(ev.tag);return `<div class="placed" draggable="true" data-event-card="${ev.sourceId}" data-event-date="${d}" style="top:${top}px;height:${height}px;left:calc(${left}% + 2px);width:calc(${w}% - 4px);background:${c.bg};border-color:${c.border};color:${c.text}"><span><b>${esc(ev.title)}</b><br><small>${ev.start}–${ev.end}</small></span></div>`}).join('');$('#timeSlots').innerHTML=`<div class="hour-grid">${hourLines}</div><div class="event-layer" id="eventLayer">${html}</div>`;
@@ -1002,13 +1009,10 @@ function renderMonth(){let y=monthDate.getFullYear(),m=monthDate.getMonth();$('#
  const monthPool=$('#monthTaskPool');
  if(monthPool){
    const allDraggableTasks=tasks.filter(t=>!t.done&&!events.some(ev=>String(ev.taskId)===String(t.id)));
-   const monthTags=['すべて',...new Set([...taskTags,...allDraggableTasks.map(t=>t.tag||'その他')])];
-   if(taskPoolTagFilter!=='すべて'&&!monthTags.includes(taskPoolTagFilter))taskPoolTagFilter='すべて';
-   $('#monthTaskPoolFilters').innerHTML='<button type="button" class="task-tag-icon" aria-label="表示するタグを選択" aria-expanded="false">🏷️</button><div class="task-tag-menu">'+monthTags.map(tag=>'<button type="button" class="task-tag-option '+(tag===taskPoolTagFilter?'active':'')+'" data-month-pool-tag="'+esc(tag)+'">'+esc(tag)+'</button>').join('')+'</div>';
-   const monthToggle=$('#monthTaskPoolFilters .task-tag-icon');monthToggle.onclick=()=>{const open=$('#monthTaskPoolFilters').classList.toggle('open');monthToggle.setAttribute('aria-expanded',String(open))};
-   const draggableTasks=taskPoolTagFilter==='すべて'?allDraggableTasks:allDraggableTasks.filter(t=>(t.tag||'その他')===taskPoolTagFilter);
+   const monthTags=[...new Set([...taskTags,...allDraggableTasks.map(t=>t.tag||'その他')])];
+   renderTaskTagPicker('monthTaskPoolFilters',monthTags,renderMonth);
+   const draggableTasks=allDraggableTasks.filter(taskTagIsVisible);
    monthPool.innerHTML=draggableTasks.map(t=>`<div class="draggable" draggable="true" data-month-task="${t.id}"><b>${esc(t.title)}</b><small>${t.minutes}分 · ${t.priority}優先 · ${esc(t.tag||"その他")}${t.plannedDate?` · 現在の実施日 ${shortDate(t.plannedDate)}${t.allDay?"（終日）":""}`:""}${t.dueDate?` · 締切 ${shortDate(t.dueDate)}`:""}</small></div>`).join("")||'<div class="empty">該当する未配置タスクはありません</div>';
-   $$('[data-month-pool-tag]').forEach(btn=>btn.onclick=()=>{taskPoolTagFilter=btn.dataset.monthPoolTag;renderMonth()});
    $$('[data-month-task]').forEach(el=>{el.ondragstart=e=>{e.dataTransfer.setData('text/plain','task:'+el.dataset.monthTask);e.dataTransfer.effectAllowed='move'}});
  }
  $$('[data-date]').forEach(cell=>{cell.ondragover=e=>{e.preventDefault();cell.classList.add('dragover')};cell.ondragleave=()=>cell.classList.remove('dragover');cell.ondrop=e=>{e.preventDefault();cell.classList.remove('dragover');let payload=e.dataTransfer.getData('text/plain');if(payload.startsWith('event:')){let [,id,oldDate]=payload.split(':');moveEventToDate(id,cell.dataset.date,oldDate)}else if(payload.startsWith('task:')){let t=tasks.find(x=>String(x.id)===payload.slice(5));if(t){t.plannedDate=cell.dataset.date;let linked=events.find(ev=>String(ev.taskId)===String(t.id)&&(!ev.repeat||ev.repeat==='none'));if(t.allDay){events=events.filter(ev=>String(ev.taskId)!==String(t.id))}else if(linked){let dur=duration(linked.start,linked.end);linked.date=cell.dataset.date;linked.end=hm(Math.min(1439,mins(linked.start)+dur))}else{let start=540,end=start+t.minutes;if(end>24*60){start=Math.max(5*60,24*60-t.minutes);end=start+t.minutes}events.push({id:eventSeq++,taskId:t.id,title:t.title,date:cell.dataset.date,start:hm(start),end:hm(end),type:'task',tag:t.tag||'勉強',repeat:'none',skipDates:[]})}}renderAll()}};bindLongPress(cell,()=>openSheet(cell.dataset.date,'09:00','10:00'));cell.onclick=e=>{if(longPressFired)return;if(e.target.closest('[data-month-event]'))return;selectedDate=new Date(cell.dataset.date+'T12:00:00');switchView('day')}});
@@ -1026,13 +1030,10 @@ function renderMonth(){let y=monthDate.getFullYear(),m=monthDate.getMonth();$('#
  function openDrawer(){if(!mobile())return;renderDrawerTasks();drawer.classList.add('open');backdrop.classList.add('open');document.body.classList.add('mobile-task-drawer-open')}
  function renderDrawerTasks(){
   const pending=tasks.filter(t=>!t.done&&!events.some(ev=>String(ev.taskId)===String(t.id)));
-  const drawerTags=['すべて',...new Set([...taskTags,...pending.map(t=>t.tag||'その他')])];
-  if(taskPoolTagFilter!=='すべて'&&!drawerTags.includes(taskPoolTagFilter))taskPoolTagFilter='すべて';
-  $('#mobileTaskDrawerFilters').innerHTML='<button type="button" class="task-tag-icon" aria-label="表示するタグを選択" aria-expanded="false">🏷️</button><div class="task-tag-menu">'+drawerTags.map(tag=>'<button type="button" class="task-tag-option '+(tag===taskPoolTagFilter?'active':'')+'" data-drawer-pool-tag="'+esc(tag)+'">'+esc(tag)+'</button>').join('')+'</div>';
-  const drawerToggle=$('#mobileTaskDrawerFilters .task-tag-icon');drawerToggle.onclick=()=>{const open=$('#mobileTaskDrawerFilters').classList.toggle('open');drawerToggle.setAttribute('aria-expanded',String(open))};
-  const shown=taskPoolTagFilter==='すべて'?pending:pending.filter(t=>(t.tag||'その他')===taskPoolTagFilter);
+  const drawerTags=[...new Set([...taskTags,...pending.map(t=>t.tag||'その他')])];
+  renderTaskTagPicker('mobileTaskDrawerFilters',drawerTags,renderDrawerTasks);
+  const shown=pending.filter(taskTagIsVisible);
   list.innerHTML=shown.map(t=>`<div class="draggable" data-mobile-task="${esc(t.id)}"><b>${esc(t.title)}</b><small>${t.minutes}分 · ${t.priority}優先 · ${esc(t.tag||'その他')}${t.plannedDate?' · '+shortDate(t.plannedDate):''}</small></div>`).join('')||'<div class="empty">該当する未配置タスクはありません</div>';
-  $$('[data-drawer-pool-tag]').forEach(btn=>btn.onclick=()=>{taskPoolTagFilter=btn.dataset.drawerPoolTag;renderDrawerTasks()});
  }
  function clearDropHighlight(){document.querySelectorAll('.mobile-drop-target').forEach(el=>el.classList.remove('mobile-drop-target'))}
  function cleanupDrag(){clearTimeout(holdTimer);if(ghost)ghost.remove();ghost=null;clearDropHighlight();drag=null}
@@ -1087,7 +1088,7 @@ function renderMonth(){let y=monthDate.getFullYear(),m=monthDate.getMonth();$('#
  document.addEventListener('pointerup',e=>{
   if(edgeStart&&e.pointerId===edgeStart.id)edgeStart=null;
   drawerSwipe=null;
-  if(drag){if(drag.active)dropTask(e.clientX,e.clientY);else{cleanupDrag();closeDrawer()}}
+  if(drag){if(drag.active)dropTask(e.clientX,e.clientY);else cleanupDrag()}
  });
  document.addEventListener('pointercancel',()=>{edgeStart=null;drawerSwipe=null;cleanupDrag()});
  $('#mobileTaskDrawerClose').onclick=closeDrawer;backdrop.onclick=closeDrawer;
@@ -1145,5 +1146,5 @@ initAuth();
 </script>
 </body></html>
 <style>
-.task-pool-filters,.task-tag-picker{position:relative;display:flex;justify-content:flex-end;align-items:center;z-index:12}.task-tag-icon{width:36px;height:34px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--accent-border);border-radius:10px;background:var(--accent-tint);font-size:17px;cursor:pointer}.task-tag-icon[aria-expanded="true"]{background:var(--accent-hover);border-color:var(--green)}.task-tag-menu{display:none;position:absolute;right:0;top:40px;min-width:150px;max-width:min(240px,78vw);padding:8px;background:var(--panel,#fff);border:1px solid var(--accent-border);border-radius:12px;box-shadow:0 8px 24px #17231d20;gap:5px;flex-wrap:wrap}.task-pool-filters.open .task-tag-menu,.task-tag-picker.open .task-tag-menu{display:flex}.task-tag-option{border:1px solid var(--line);border-radius:18px;padding:6px 10px;background:var(--panel,#fff);color:var(--ink);font-size:11px;cursor:pointer}.task-tag-option.active{background:var(--green2);border-color:var(--green);color:var(--accent-ink);font-weight:700}.mobile-task-drawer .task-tag-picker{align-self:flex-start;justify-content:flex-start}.mobile-task-drawer .task-tag-menu{left:0;right:auto}
+.task-pool-filters,.task-tag-picker{position:relative;display:flex;justify-content:flex-end;align-items:center;z-index:12}.task-tag-icon{width:36px;height:34px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--accent-border);border-radius:10px;background:var(--accent-tint);font-size:17px;cursor:pointer}.task-tag-icon svg{width:18px;height:18px;fill:none;stroke:var(--accent-ink);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.task-tag-icon[aria-expanded="true"]{background:var(--accent-hover);border-color:var(--green)}.task-tag-menu{display:none;position:absolute;right:0;top:40px;min-width:150px;max-width:min(240px,78vw);padding:8px;background:var(--panel,#fff);border:1px solid var(--accent-border);border-radius:12px;box-shadow:0 8px 24px #17231d20;gap:5px;flex-wrap:wrap}.task-pool-filters.open .task-tag-menu,.task-tag-picker.open .task-tag-menu{display:flex}.task-tag-option{border:1px solid var(--line);border-radius:18px;padding:6px 10px;background:var(--panel,#fff);color:var(--ink);font-size:11px;cursor:pointer}.task-tag-option.active{background:var(--green2);border-color:var(--green);color:var(--accent-ink);font-weight:700}.mobile-task-drawer .task-tag-picker{align-self:flex-start;justify-content:flex-start}.mobile-task-drawer .task-tag-menu{left:0;right:auto}
 </style>
