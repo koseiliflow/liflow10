@@ -1075,14 +1075,14 @@ function renderMonth(){let y=monthDate.getFullYear(),m=monthDate.getMonth();$('#
   if(drawer.classList.contains('open')&&e.clientX>drawer.getBoundingClientRect().right-28){drawerSwipe={x:e.clientX,y:e.clientY};return}
   const card=e.target.closest('[data-mobile-task]');if(!card||!drawer.contains(card))return;
   const task=tasks.find(t=>String(t.id)===String(card.dataset.mobileTask));if(!task)return;
-  drag={task,active:false,startX:e.clientX,startY:e.clientY,pointerId:e.pointerId};
+  drag={task,active:false,startX:e.clientX,startY:e.clientY,lastY:e.clientY,pointerId:e.pointerId};
   holdTimer=setTimeout(()=>{if(!drag)return;drag.active=true;makeGhost(task,drag.startX,drag.startY);closeDrawer();card.classList.add('mobile-drop-target')},260);
  },{passive:true});
  document.addEventListener('pointermove',e=>{
   if(edgeStart&&e.pointerId===edgeStart.id){const dx=e.clientX-edgeStart.x,dy=e.clientY-edgeStart.y;if(dx>58&&Math.abs(dx)>Math.abs(dy)*1.2){edgeStart=null;openDrawer()}return}
   if(drawerSwipe){if(drawerSwipe.x-e.clientX>65&&Math.abs(drawerSwipe.x-e.clientX)>Math.abs(drawerSwipe.y-e.clientY)) {drawerSwipe=null;closeDrawer()}return}
   if(!drag)return;
-  if(!drag.active&&Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)>12){clearTimeout(holdTimer);return}
+  if(!drag.active&&Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)>12){clearTimeout(holdTimer);e.preventDefault();list.scrollTop+=drag.lastY-e.clientY;drag.lastY=e.clientY;return}
   if(drag.active){e.preventDefault();moveGhost(e.clientX,e.clientY);clearDropHighlight();const target=document.elementFromPoint(e.clientX,e.clientY);const drop=target?.closest('#monthGrid [data-date], #eventLayer');if(drop)drop.classList.add('mobile-drop-target')}
  },{passive:false});
  document.addEventListener('pointerup',e=>{
@@ -1147,4 +1147,21 @@ initAuth();
 </body></html>
 <style>
 .task-pool-filters,.task-tag-picker{position:relative;display:flex;justify-content:flex-end;align-items:center;z-index:12}.task-tag-icon{width:36px;height:34px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--accent-border);border-radius:10px;background:var(--accent-tint);font-size:17px;cursor:pointer}.task-tag-icon svg{width:18px;height:18px;fill:none;stroke:var(--accent-ink);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.task-tag-icon[aria-expanded="true"]{background:var(--accent-hover);border-color:var(--green)}.task-tag-menu{display:none;position:absolute;right:0;top:40px;min-width:150px;max-width:min(240px,78vw);padding:8px;background:var(--panel,#fff);border:1px solid var(--accent-border);border-radius:12px;box-shadow:0 8px 24px #17231d20;gap:5px;flex-wrap:wrap}.task-pool-filters.open .task-tag-menu,.task-tag-picker.open .task-tag-menu{display:flex}.task-tag-option{border:1px solid var(--line);border-radius:18px;padding:6px 10px;background:var(--panel,#fff);color:var(--ink);font-size:11px;cursor:pointer}.task-tag-option.active{background:var(--green2);border-color:var(--green);color:var(--accent-ink);font-weight:700}.mobile-task-drawer .task-tag-picker{align-self:flex-start;justify-content:flex-start}.mobile-task-drawer .task-tag-menu{left:0;right:auto}
+
+/* Refined scroll areas and evenly spaced mobile dashboard cards */
+@media(max-width:600px){
+ .mobile-task-drawer{height:100vh;height:100dvh;min-height:0}
+ #mobileTaskDrawerFilters{flex:0 0 auto}
+ #mobileTaskDrawerList{display:block;flex:1 1 0;height:0;min-height:0;max-height:none;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;touch-action:none;padding-bottom:24px}
+ #mobileTaskDrawerList .draggable{touch-action:none}
+ #home .stats{align-items:stretch;gap:7px}
+ #home .stat{box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;min-width:0;min-height:96px;height:100%;padding:10px 8px;border-radius:12px}
+ #home .stat small{min-height:2.6em;display:flex;align-items:flex-start;line-height:1.3}
+ #home .stat strong{margin:3px 0 0;font-size:17px;line-height:1.2}
+ #home .stat em{min-height:1.3em;font-size:9px;line-height:1.3}
+}
+#focus .grid{align-items:stretch}
+#focus #sessionList{max-height:360px;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;padding-right:5px}
+#focus #sessionList .taskrow{min-width:0}
+@media(max-width:600px){#focus #sessionList{max-height:42vh;max-height:42dvh}}
 </style>
