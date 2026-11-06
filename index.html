@@ -566,6 +566,12 @@ const LIFLOW_THEMES=[
  {id:"navy",name:"ネイビー",main:"#536b91",soft:"#e9edf5",background:"#f6f8fb"},
  {id:"gray",name:"グレー",main:"#78838b",soft:"#edf0f2",background:"#f7f8f9"}
 ];
+// ベースカラーに合わせてブラウザのタブ・ブックマーク用アイコンを更新
+function updateLiflowFavicon(color){
+ const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="'+color+'"/><path d="M166 118v226c0 22 18 40 40 40h151" fill="none" stroke="#fff" stroke-width="62" stroke-linecap="round" stroke-linejoin="round"/><circle cx="386" cy="384" r="31" fill="#fff"/></svg>';
+ const href="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
+ document.querySelectorAll('link[rel~="icon"],link[rel="shortcut icon"]').forEach(link=>{link.href=href});
+}
 // 起動時にも保存済みベースカラーを反映（選択UIの生成は設定画面を開くまで遅延）
 try{
  const savedThemeId=localStorage.getItem("liflow_base_theme")||"green";
@@ -573,12 +579,14 @@ try{
  document.documentElement.style.setProperty("--green",startupTheme.main);
  document.documentElement.style.setProperty("--green2",startupTheme.soft);
  document.documentElement.style.setProperty("--bg",startupTheme.background);
+ updateLiflowFavicon(startupTheme.main);
 }catch(e){}
 function applyBaseTheme(id,save=true){
  const theme=LIFLOW_THEMES.find(item=>item.id===id)||LIFLOW_THEMES[0];
  document.documentElement.style.setProperty("--green",theme.main);
  document.documentElement.style.setProperty("--green2",theme.soft);
   document.documentElement.style.setProperty("--bg",theme.background);
+ updateLiflowFavicon(theme.main);
  if(save){try{localStorage.setItem("liflow_base_theme",theme.id)}catch(e){}}
  const current=$("#themeCurrent");
  if(current)current.textContent=theme.name;
