@@ -108,6 +108,25 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
 .auth-message{font-size:12px;line-height:1.6;padding:10px 12px;border-radius:9px;display:none}.auth-message.show{display:block}.auth-message.error{background:#fff0ed;color:#a44d3b}.auth-message.success{background:#edf5ef;color:#42634f}
 .auth-link{border:0;background:transparent;color:#52745f;text-decoration:underline;font-size:12px;padding:8px}.auth-config-note{font-size:11px;color:#9a7449;background:#faf4eb;padding:10px;border-radius:9px;margin-top:15px;line-height:1.6}
 .account-tools{display:flex;align-items:center;gap:9px}.account-email,.sync-state,.account-tools #enablePushBtn,.account-tools #logoutBtn{display:none}
+
+/* Mobile task drawer and touch drag */
+.mobile-task-drawer-backdrop{display:none}
+.mobile-task-drawer{display:none}
+.mobile-task-ghost{position:fixed;z-index:10050;pointer-events:none;max-width:240px;padding:12px 14px;border:1px solid var(--accent-border);border-radius:12px;background:#fff;color:var(--ink);box-shadow:0 8px 28px #18251c30;font-size:13px;font-weight:700;opacity:.96}
+.mobile-drop-target{outline:2px dashed var(--green)!important;outline-offset:-3px;background:var(--accent-tint)!important}
+@media(max-width:600px){
+ .mobile-task-drawer-backdrop{display:block;position:fixed;inset:0;z-index:70;background:#17231d55;opacity:0;pointer-events:none;transition:opacity .22s}
+ .mobile-task-drawer-backdrop.open{opacity:1;pointer-events:auto}
+ .mobile-task-drawer{display:flex;position:fixed;z-index:71;left:0;top:0;bottom:0;width:min(86vw,360px);padding:calc(16px + env(safe-area-inset-top)) 14px calc(18px + env(safe-area-inset-bottom));background:var(--panel);box-shadow:8px 0 30px #17231d22;transform:translateX(-105%);transition:transform .24s ease;flex-direction:column;gap:12px;overflow:hidden}
+ .mobile-task-drawer.open{transform:translateX(0)}
+ .mobile-task-drawer-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+ .mobile-task-drawer-head h2{font-size:17px;margin:0}
+ .mobile-task-drawer-hint{font-size:11px;color:var(--muted);margin:0}
+ #mobileTaskDrawerList{overflow-y:auto;overscroll-behavior:contain;min-height:0;flex:1;padding-bottom:18px}
+ #mobileTaskDrawerList .draggable{touch-action:pan-y;user-select:none;-webkit-user-select:none}
+ body.mobile-task-drawer-open{overflow:hidden}
+}
+
 .settings-trigger{display:flex;width:42px;height:42px;border:1px solid color-mix(in srgb,var(--green) 28%,white);border-radius:14px;background:var(--green2);color:var(--green);align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 7px color-mix(in srgb,var(--green) 12%,transparent);transition:background .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease}
 .settings-trigger svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round}
 .settings-trigger:hover{background:color-mix(in srgb,var(--green) 17%,white);border-color:color-mix(in srgb,var(--green) 42%,white);box-shadow:0 3px 10px color-mix(in srgb,var(--green) 18%,transparent)}
@@ -342,6 +361,14 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
 </section>
 </main>
 </div>
+
+
+<div class="mobile-task-drawer-backdrop" id="mobileTaskDrawerBackdrop"></div>
+<aside class="mobile-task-drawer" id="mobileTaskDrawer" aria-label="未配置のタスク一覧">
+ <div class="mobile-task-drawer-head"><h2>未配置のタスク</h2><button type="button" class="btn light small" id="mobileTaskDrawerClose" aria-label="閉じる">閉じる ×</button></div>
+ <p class="mobile-task-drawer-hint">タスクを長押しして、日付や時間の上までドラッグしてください。</p>
+ <div id="mobileTaskDrawerList"></div>
+</aside>
 
 <div class="sheet-backdrop" id="sheetBackdrop"></div>
 <section class="bottom-sheet" id="eventSheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
@@ -967,6 +994,79 @@ function renderMonth(){let y=monthDate.getFullYear(),m=monthDate.getMonth();$('#
  $$('[data-date]').forEach(cell=>{cell.ondragover=e=>{e.preventDefault();cell.classList.add('dragover')};cell.ondragleave=()=>cell.classList.remove('dragover');cell.ondrop=e=>{e.preventDefault();cell.classList.remove('dragover');let payload=e.dataTransfer.getData('text/plain');if(payload.startsWith('event:')){let [,id,oldDate]=payload.split(':');moveEventToDate(id,cell.dataset.date,oldDate)}else if(payload.startsWith('task:')){let t=tasks.find(x=>String(x.id)===payload.slice(5));if(t){t.plannedDate=cell.dataset.date;let linked=events.find(ev=>String(ev.taskId)===String(t.id)&&(!ev.repeat||ev.repeat==='none'));if(t.allDay){events=events.filter(ev=>String(ev.taskId)!==String(t.id))}else if(linked){let dur=duration(linked.start,linked.end);linked.date=cell.dataset.date;linked.end=hm(Math.min(1439,mins(linked.start)+dur))}else{let start=540,end=start+t.minutes;if(end>24*60){start=Math.max(5*60,24*60-t.minutes);end=start+t.minutes}events.push({id:eventSeq++,taskId:t.id,title:t.title,date:cell.dataset.date,start:hm(start),end:hm(end),type:'task',tag:t.tag||'勉強',repeat:'none',skipDates:[]})}}renderAll()}};bindLongPress(cell,()=>openSheet(cell.dataset.date,'09:00','10:00'));cell.onclick=e=>{if(longPressFired)return;if(e.target.closest('[data-month-event]'))return;selectedDate=new Date(cell.dataset.date+'T12:00:00');switchView('day')}});
  $$('[data-month-event]').forEach(el=>{el.addEventListener('pointerdown',e=>e.stopPropagation());el.ondragstart=e=>{e.stopPropagation();e.dataTransfer.setData('text/plain',`event:${el.dataset.monthEvent}:${el.dataset.eventDate}`)};el.onclick=e=>{e.stopPropagation();showEventDetail(el.dataset.monthEvent,el.dataset.eventDate)}})
 }
+
+
+/* iPhone: edge-swipe task drawer + touch drag-and-drop */
+(()=>{
+ const drawer=$('#mobileTaskDrawer'),backdrop=$('#mobileTaskDrawerBackdrop'),list=$('#mobileTaskDrawerList');
+ if(!drawer||!backdrop||!list)return;
+ let edgeStart=null,drag=null,ghost=null,holdTimer=null,drawerSwipe=null;
+ const mobile=()=>window.matchMedia('(max-width:600px)').matches;
+ function closeDrawer(){drawer.classList.remove('open');backdrop.classList.remove('open');document.body.classList.remove('mobile-task-drawer-open');clearDropHighlight()}
+ function openDrawer(){if(!mobile())return;renderDrawerTasks();drawer.classList.add('open');backdrop.classList.add('open');document.body.classList.add('mobile-task-drawer-open')}
+ function renderDrawerTasks(){
+  const pending=tasks.filter(t=>!t.done&&!events.some(ev=>String(ev.taskId)===String(t.id)));
+  list.innerHTML=pending.map(t=>`<div class="draggable" data-mobile-task="${esc(t.id)}"><b>${esc(t.title)}</b><small>${t.minutes}分 · ${t.priority}優先 · ${esc(t.tag||'その他')}${t.plannedDate?' · '+shortDate(t.plannedDate):''}</small></div>`).join('')||'<div class="empty">未配置のタスクはありません</div>';
+ }
+ function clearDropHighlight(){document.querySelectorAll('.mobile-drop-target').forEach(el=>el.classList.remove('mobile-drop-target'))}
+ function cleanupDrag(){clearTimeout(holdTimer);if(ghost)ghost.remove();ghost=null;clearDropHighlight();drag=null}
+ function makeGhost(task,x,y){ghost=document.createElement('div');ghost.className='mobile-task-ghost';ghost.textContent=task.title;document.body.appendChild(ghost);moveGhost(x,y)}
+ function moveGhost(x,y){if(ghost){ghost.style.left=Math.min(window.innerWidth-250,Math.max(8,x+14))+'px';ghost.style.top=Math.min(window.innerHeight-70,Math.max(8,y-20))+'px'}}
+ function placeOnDay(task,date,minute){
+  const d=tasks.find(t=>String(t.id)===String(task.id));if(!d)return false;
+  d.plannedDate=date;
+  if(d.allDay){events=events.filter(ev=>String(ev.taskId)!==String(d.id));return true}
+  const start=Math.max(5*60,Math.min(24*60-d.minutes,Math.round(minute/5)*5));
+  events=events.filter(ev=>String(ev.taskId)!==String(d.id));
+  events.push({id:eventSeq++,taskId:d.id,title:d.title,start:hm(start),end:hm(start+d.minutes),type:'task',tag:d.tag||'勉強',date,repeat:'none',skipDates:[]});
+  return true;
+ }
+ function placeOnMonth(task,date){
+  const d=tasks.find(t=>String(t.id)===String(task.id));if(!d)return false;
+  d.plannedDate=date;
+  const linked=events.find(ev=>String(ev.taskId)===String(d.id)&&(!ev.repeat||ev.repeat==='none'));
+  if(d.allDay){events=events.filter(ev=>String(ev.taskId)!==String(d.id));return true}
+  if(linked){const dur=duration(linked.start,linked.end);linked.date=date;linked.end=hm(Math.min(24*60-1,mins(linked.start)+dur))}
+  else{let start=9*60;if(start+d.minutes>24*60)start=Math.max(5*60,24*60-d.minutes);events.push({id:eventSeq++,taskId:d.id,title:d.title,date,start:hm(start),end:hm(start+d.minutes),type:'task',tag:d.tag||'勉強',repeat:'none',skipDates:[]})}
+  return true;
+ }
+ function dropTask(x,y){
+  if(!drag?.active)return;
+  const target=document.elementFromPoint(x,y);
+  const cell=target?.closest('#monthGrid [data-date]');
+  const layer=target?.closest('#eventLayer');
+  if(cell&&$('#month').classList.contains('show')){placeOnMonth(drag.task,cell.dataset.date);closeDrawer();renderAll();return}
+  if(layer&&$('#day').classList.contains('show')){
+   const rect=layer.getBoundingClientRect(),minute=5*60+(y-rect.top);
+   if(placeOnDay(drag.task,key(selectedDate),minute)){closeDrawer();renderAll();return}
+  }
+  cleanupDrag();
+ }
+ document.addEventListener('pointerdown',e=>{
+  if(!mobile()||e.pointerType==='mouse')return;
+  if(!drawer.classList.contains('open')&&e.clientX<=22){edgeStart={x:e.clientX,y:e.clientY,id:e.pointerId};return}
+  if(drawer.classList.contains('open')&&e.clientX>drawer.getBoundingClientRect().right-28){drawerSwipe={x:e.clientX,y:e.clientY};return}
+  const card=e.target.closest('[data-mobile-task]');if(!card||!drawer.contains(card))return;
+  const task=tasks.find(t=>String(t.id)===String(card.dataset.mobileTask));if(!task)return;
+  drag={task,active:false,startX:e.clientX,startY:e.clientY,pointerId:e.pointerId};
+  holdTimer=setTimeout(()=>{if(!drag)return;drag.active=true;makeGhost(task,drag.startX,drag.startY);card.classList.add('mobile-drop-target')},260);
+ },{passive:true});
+ document.addEventListener('pointermove',e=>{
+  if(edgeStart&&e.pointerId===edgeStart.id){const dx=e.clientX-edgeStart.x,dy=e.clientY-edgeStart.y;if(dx>58&&Math.abs(dx)>Math.abs(dy)*1.2){edgeStart=null;openDrawer()}return}
+  if(drawerSwipe){if(drawerSwipe.x-e.clientX>65&&Math.abs(drawerSwipe.x-e.clientX)>Math.abs(drawerSwipe.y-e.clientY)) {drawerSwipe=null;closeDrawer()}return}
+  if(!drag)return;
+  if(!drag.active&&Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)>12){clearTimeout(holdTimer);return}
+  if(drag.active){e.preventDefault();moveGhost(e.clientX,e.clientY);clearDropHighlight();const target=document.elementFromPoint(e.clientX,e.clientY);const drop=target?.closest('#monthGrid [data-date], #eventLayer');if(drop)drop.classList.add('mobile-drop-target')}
+ },{passive:false});
+ document.addEventListener('pointerup',e=>{
+  if(edgeStart&&e.pointerId===edgeStart.id)edgeStart=null;
+  drawerSwipe=null;
+  if(drag){if(drag.active)dropTask(e.clientX,e.clientY);else cleanupDrag()}
+ });
+ document.addEventListener('pointercancel',()=>{edgeStart=null;drawerSwipe=null;cleanupDrag()});
+ $('#mobileTaskDrawerClose').onclick=closeDrawer;backdrop.onclick=closeDrawer;
+ window.addEventListener('resize',()=>{if(!mobile())closeDrawer()});
+})();
 
 // --- Supabase account / cloud sync ---
 // Supabase Dashboard > Project Settings > API からURLと anon public keyを設定してください。
