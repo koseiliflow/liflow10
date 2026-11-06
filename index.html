@@ -632,7 +632,7 @@ async function deleteLiflowAccount(){
    localStorage.removeItem(LEGACY_STORAGE_KEY);
    localStorage.removeItem("liflow_legacy_migrated_v1");
   }catch(storageError){}
-  await window.liflowSupabase.auth.signOut({scope:"local"});
+  try{await window.liflowSupabase.auth.signOut({scope:"local"})}catch(signOutError){console.warn("Local sign-out after account deletion:",signOutError)}
   alert("アカウントと関連データを削除しました。ご利用ありがとうございました。");
   location.reload();
  }catch(error){
