@@ -568,9 +568,23 @@ const LIFLOW_THEMES=[
 ];
 // ベースカラーに合わせてブラウザのタブ・ブックマーク用アイコンを更新
 function updateLiflowFavicon(color){
- const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="'+color+'"/><path d="M166 118v226c0 22 18 40 40 40h151" fill="none" stroke="#fff" stroke-width="62" stroke-linecap="round" stroke-linejoin="round"/><circle cx="386" cy="384" r="31" fill="#fff"/></svg>';
- const href="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
- document.querySelectorAll('link[rel~="icon"],link[rel="shortcut icon"]').forEach(link=>{link.href=href});
+ // iOS SafariではSVG/data URLのfaviconが反映されにくい場合があるため、PNGをCanvasで生成
+ const canvas=document.createElement("canvas");
+ canvas.width=180;canvas.height=180;
+ const ctx=canvas.getContext("2d");
+ if(!ctx)return;
+ const radius=40;
+ ctx.fillStyle=color;
+ ctx.beginPath();
+ ctx.moveTo(radius,0);ctx.lineTo(180-radius,0);ctx.quadraticCurveTo(180,0,180,radius);
+ ctx.lineTo(180,180-radius);ctx.quadraticCurveTo(180,180,180-radius,180);
+ ctx.lineTo(radius,180);ctx.quadraticCurveTo(0,180,0,180-radius);
+ ctx.lineTo(0,radius);ctx.quadraticCurveTo(0,0,radius,0);ctx.closePath();ctx.fill();
+ ctx.strokeStyle="#fff";ctx.lineWidth=22;ctx.lineCap="round";ctx.lineJoin="round";
+ ctx.beginPath();ctx.moveTo(58,42);ctx.lineTo(58,122);ctx.quadraticCurveTo(58,136,72,136);ctx.lineTo(128,136);ctx.stroke();
+ ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(136,136,11,0,Math.PI*2);ctx.fill();
+ const href=canvas.toDataURL("image/png");
+ document.querySelectorAll('link[rel~="icon"],link[rel="shortcut icon"],link[rel="apple-touch-icon"]').forEach(link=>{link.href=href});
 }
 // 起動時にも保存済みベースカラーを反映（選択UIの生成は設定画面を開くまで遅延）
 try{
