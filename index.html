@@ -1049,7 +1049,7 @@ function renderMonth(){let y=monthDate.getFullYear(),m=monthDate.getMonth();$('#
   const card=e.target.closest('[data-mobile-task]');if(!card||!drawer.contains(card))return;
   const task=tasks.find(t=>String(t.id)===String(card.dataset.mobileTask));if(!task)return;
   drag={task,active:false,startX:e.clientX,startY:e.clientY,pointerId:e.pointerId};
-  holdTimer=setTimeout(()=>{if(!drag)return;drag.active=true;makeGhost(task,drag.startX,drag.startY);card.classList.add('mobile-drop-target')},260);
+  holdTimer=setTimeout(()=>{if(!drag)return;drag.active=true;makeGhost(task,drag.startX,drag.startY);closeDrawer();card.classList.add('mobile-drop-target')},260);
  },{passive:true});
  document.addEventListener('pointermove',e=>{
   if(edgeStart&&e.pointerId===edgeStart.id){const dx=e.clientX-edgeStart.x,dy=e.clientY-edgeStart.y;if(dx>58&&Math.abs(dx)>Math.abs(dy)*1.2){edgeStart=null;openDrawer()}return}
