@@ -626,7 +626,7 @@ function renderTaskTagPicker(containerId,tags,rerender){
  const options=["すべて",...tags];
  root.innerHTML='<button type="button" class="task-tag-icon" aria-label="表示するタグを選択" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.59 13.41 11 3.83A2.8 2.8 0 0 0 9 3H4a1 1 0 0 0-1 1v5a2.8 2.8 0 0 0 .83 2l9.58 9.59a2.25 2.25 0 0 0 3.18 0l4-4a2.25 2.25 0 0 0 0-3.18Z"/><circle cx="7.5" cy="7.5" r="1"/></svg></button><div class="task-tag-menu">'+options.map(tag=>'<button type="button" class="task-tag-option '+((tag==="すべて"?!taskPoolTagFilters.length:taskPoolTagFilters.includes(tag))?'active':'')+'" data-task-tag-filter="'+esc(tag)+'">'+esc(tag)+'</button>').join('')+'</div>';
  const toggle=root.querySelector(".task-tag-icon");toggle.onclick=()=>{const open=root.classList.toggle("open");toggle.setAttribute("aria-expanded",String(open))};
- $("#"+containerId+" [data-task-tag-filter]").forEach(btn=>btn.onclick=()=>{const tag=btn.dataset.taskTagFilter;if(tag==="すべて")taskPoolTagFilters=[];else if(taskPoolTagFilters.includes(tag))taskPoolTagFilters=taskPoolTagFilters.filter(x=>x!==tag);else taskPoolTagFilters.push(tag);rerender()});
+ $$("#"+containerId+" [data-task-tag-filter]").forEach(btn=>btn.onclick=()=>{const tag=btn.dataset.taskTagFilter;if(tag==="すべて")taskPoolTagFilters=[];else if(taskPoolTagFilters.includes(tag))taskPoolTagFilters=taskPoolTagFilters.filter(x=>x!==tag);else taskPoolTagFilters.push(tag);rerender()});
 }
 let taskPoolTagFilters=[];
 let customTagStyles={};
