@@ -1033,7 +1033,7 @@ function renderMonth(){let y=monthDate.getFullYear(),m=monthDate.getMonth();$('#
   const drawerTags=[...new Set([...taskTags,...pending.map(t=>t.tag||'その他')])];
   renderTaskTagPicker('mobileTaskDrawerFilters',drawerTags,renderDrawerTasks);
   const shown=pending.filter(taskTagIsVisible);
-  list.innerHTML=shown.map(t=>`<div class="draggable" data-mobile-task="${esc(t.id)}"><b>${esc(t.title)}</b><small>${t.minutes}分 · ${t.priority}優先 · ${esc(t.tag||'その他')}${t.plannedDate?' · '+shortDate(t.plannedDate):''}</small><span class="mobile-task-drag-handle" data-mobile-task-handle aria-label="長押ししてドラッグ">⠿</span></div>`).join('')||'<div class="empty">該当する未配置タスクはありません</div>';
+  list.innerHTML=shown.map(t=>`<div class="draggable" data-mobile-task="${esc(t.id)}"><b>${esc(t.title)}</b><small>${t.minutes}分 · ${t.priority}優先 · ${esc(t.tag||'その他')}${t.plannedDate?' · '+shortDate(t.plannedDate):''}</small></div>`).join('')||'<div class="empty">該当する未配置タスクはありません</div>';
  }
  function clearDropHighlight(){document.querySelectorAll('.mobile-drop-target').forEach(el=>el.classList.remove('mobile-drop-target'))}
  function cleanupDrag(){clearTimeout(holdTimer);if(ghost)ghost.remove();ghost=null;clearDropHighlight();drag=null}
@@ -1073,16 +1073,16 @@ function renderMonth(){let y=monthDate.getFullYear(),m=monthDate.getMonth();$('#
   if(!mobile()||e.pointerType==='mouse')return;
   if(!drawer.classList.contains('open')&&e.clientX<=22){edgeStart={x:e.clientX,y:e.clientY,id:e.pointerId};return}
   if(drawer.classList.contains('open')&&e.clientX>drawer.getBoundingClientRect().right-28){drawerSwipe={x:e.clientX,y:e.clientY};return}
-  const handle=e.target.closest('[data-mobile-task-handle]');if(!handle||!drawer.contains(handle))return;
-  const card=handle.closest('[data-mobile-task]');if(!card)return;
+  const card=e.target.closest('[data-mobile-task]');if(!card||!drawer.contains(card))return;
   const task=tasks.find(t=>String(t.id)===String(card.dataset.mobileTask));if(!task)return;
   drag={task,active:false,startX:e.clientX,startY:e.clientY,pointerId:e.pointerId,card};
-  holdTimer=setTimeout(()=>{if(!drag)return;drag.active=true;makeGhost(task,drag.startX,drag.startY);closeDrawer();card.classList.add('mobile-drop-target')},320);
+  holdTimer=setTimeout(()=>{if(!drag)return;drag.active=true;makeGhost(task,drag.startX,drag.startY);closeDrawer();card.classList.add('mobile-drop-target')},420);
  },{passive:true});
  document.addEventListener('pointermove',e=>{
   if(edgeStart&&e.pointerId===edgeStart.id){const dx=e.clientX-edgeStart.x,dy=e.clientY-edgeStart.y;if(dx>58&&Math.abs(dx)>Math.abs(dy)*1.2){edgeStart=null;openDrawer()}return}
   if(drawerSwipe){if(drawerSwipe.x-e.clientX>65&&Math.abs(drawerSwipe.x-e.clientX)>Math.abs(drawerSwipe.y-e.clientY)){drawerSwipe=null;closeDrawer()}return}
-  if(!drag||!drag.active)return;
+  if(!drag)return;
+  if(!drag.active){if(Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)>10)cleanupDrag();return}
   e.preventDefault();moveGhost(e.clientX,e.clientY);clearDropHighlight();
   const target=document.elementFromPoint(e.clientX,e.clientY);
   const drop=target?.closest('#monthGrid [data-date], #eventLayer');if(drop)drop.classList.add('mobile-drop-target')
@@ -1093,6 +1093,7 @@ function renderMonth(){let y=monthDate.getFullYear(),m=monthDate.getMonth();$('#
   if(drag){if(drag.active)dropTask(e.clientX,e.clientY);else cleanupDrag()}
  });
  document.addEventListener('pointercancel',()=>{edgeStart=null;drawerSwipe=null;cleanupDrag()});
+ document.addEventListener('touchmove',e=>{if(drag?.active)e.preventDefault()},{passive:false});
  $('#mobileTaskDrawerClose').onclick=closeDrawer;backdrop.onclick=closeDrawer;
  window.addEventListener('resize',()=>{if(!mobile())closeDrawer()});
 })();
@@ -1155,8 +1156,8 @@ initAuth();
  .mobile-task-drawer{height:100vh;height:100dvh;min-height:0}
  #mobileTaskDrawerFilters{flex:0 0 auto}
  #mobileTaskDrawerList{display:block;flex:1 1 0;height:0;min-height:0;max-height:none;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;touch-action:pan-y;scrollbar-width:thin;padding-bottom:24px}
- #mobileTaskDrawerList .draggable{position:relative;padding-right:42px;touch-action:pan-y;user-select:none;-webkit-user-select:none}
- #mobileTaskDrawerList .mobile-task-drag-handle{position:absolute;right:7px;top:50%;transform:translateY(-50%);width:30px;height:34px;display:flex;align-items:center;justify-content:center;border:1px solid var(--accent-border);border-radius:9px;background:var(--accent-tint);color:var(--accent-ink);font-size:23px;line-height:1;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+ #mobileTaskDrawerList .draggable{position:relative;padding-right:12px;touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:default}
+ #mobileTaskDrawerList .draggable:active{cursor:grabbing}
  #home .stats{align-items:stretch;gap:7px}
  #home .stat{box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;min-width:0;min-height:96px;height:100%;padding:10px 8px;border-radius:12px}
  #home .stat small{min-height:2.6em;display:flex;align-items:flex-start;line-height:1.3}
