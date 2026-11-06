@@ -424,7 +424,9 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
   <div class="settings-item"><div class="settings-label">アカウント</div><div class="settings-value" id="settingsEmail">—</div></div>
   <div class="settings-item"><div class="settings-label">クラウド同期</div><div class="settings-value" id="settingsSyncState">読み込み中…</div></div>
   <div class="settings-item"><div class="settings-label">通知</div><div class="settings-value" id="settingsPushState">確認中…</div><button class="btn light" id="settingsEnablePush" type="button">通知を有効にする</button></div>
+  <div class="settings-item"><div class="settings-label">プライバシー</div><a href="/liflow10/privacy.html" target="_blank" rel="noopener">プライバシーポリシーを確認</a></div>
   <button class="btn ghost settings-logout" id="settingsLogout" type="button">ログアウト</button>
+  <button class="btn ghost" id="deleteAccountBtn" type="button" style="color:#b44b4b;border-color:#d9aaaa">アカウントと全データを削除</button>
  </div>
 </section>
 <div class="tag-color-backdrop" id="tagColorBackdrop" role="dialog" aria-modal="true" aria-labelledby="tagColorTitle">
@@ -605,6 +607,39 @@ $("#openSettings").onclick=()=>{if(!$("#themeOptions").dataset.initialized){init
 $("#settingsClose").onclick=closeSheets;
 $("#settingsEnablePush").onclick=enablePushNotifications;
 $("#settingsLogout").onclick=()=>$("#logoutBtn").click();
+$("#deleteAccountBtn").onclick=deleteLiflowAccount;
+async function deleteLiflowAccount(){
+ if(!currentUser||!window.liflowSupabase){alert("ログイン状態を確認できません。");return}
+ const email=currentUser.email||"";
+ if(!confirm("アカウントと、クラウドに保存されたタスク・予定・集中記録・通知情報をすべて削除します。\nこの操作は取り消せません。続行しますか？"))return;
+ const confirmation=prompt("本当に削除する場合は DELETE と入力してください。");
+ if(confirmation!=="DELETE"){if(confirmation!==null)alert("入力が一致しないため、削除を中止しました。");return}
+ const button=$("#deleteAccountBtn");button.disabled=true;button.textContent="削除しています…";
+ try{
+  if(cloudSaveTimer)clearTimeout(cloudSaveTimer);
+  if(timer.interval)clearInterval(timer.interval);
+  const {data,error}=await window.liflowSupabase.functions.invoke("liflow-delete-account");
+  if(error)throw error;
+  if(data?.error)throw new Error(data.error);
+  try{
+   const registration=await navigator.serviceWorker?.getRegistration(LIFLOW_PUSH_SCOPE);
+   const subscription=await registration?.pushManager?.getSubscription();
+   if(subscription)await subscription.unsubscribe();
+  }catch(pushError){console.warn("Local push unsubscribe skipped:",pushError)}
+  try{
+   if(STORAGE_KEY)localStorage.removeItem(STORAGE_KEY);
+   localStorage.removeItem(LEGACY_STORAGE_KEY);
+   localStorage.removeItem("liflow_legacy_migrated_v1");
+  }catch(storageError){}
+  await window.liflowSupabase.auth.signOut({scope:"local"});
+  alert("アカウントと関連データを削除しました。ご利用ありがとうございました。");
+  location.reload();
+ }catch(error){
+  console.error("Account deletion failed:",error);
+  alert("削除できませんでした。データは削除完了していません。通信状況を確認して再度お試しください。\n"+(error.message||""));
+  button.disabled=false;button.textContent="アカウントと全データを削除";
+ }
+}
 $("#enablePushBtn")?.addEventListener("click",enablePushNotifications);
 updatePushButton();
 
