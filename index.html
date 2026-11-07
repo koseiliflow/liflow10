@@ -759,7 +759,7 @@ function duration(a,b){return mins(b)-mins(a)}
 function tagStyle(tag){if(customTagStyles[tag])return customTagStyles[tag];if(TAG_STYLES[tag])return TAG_STYLES[tag];const palette=[{bg:"#edf1fa",text:"#60769a",border:"#8da0c2"},{bg:"#e8f2ec",text:"#52755e",border:"#80a18a"},{bg:"#fff0e4",text:"#a16d42",border:"#d4a16d"},{bg:"#f3edf7",text:"#80618d",border:"#a98bb4"},{bg:"#eaf3f5",text:"#527c86",border:"#8db2ba"},{bg:"#f8edf0",text:"#9a6375",border:"#c99aaa"}];let i=[...String(tag||"")].reduce((a,c)=>a+c.charCodeAt(0),0)%palette.length;return palette[i]}
 function tagInline(tag){let c=tagStyle(tag);return `background:${c.bg};border-color:${c.border};color:${c.text}`}
 function shortDate(dateString){if(!dateString)return "";let [y,m,d]=dateString.split("-").map(Number);return `${m}/${d}`}
-function renderAll(){saveData();renderHome();renderTasks();renderDay();renderMonth();renderTimerOptions();renderSessions()}
+function renderAll(){saveData();renderHome();renderTasks();renderDay();renderMonth();renderTimerOptions();renderSessions();if($("#day")?.classList.contains("week-mode"))renderWeek()}
 $("#todayLabel").textContent=fmtDate(today);
 let scheduleMode=window.matchMedia('(max-width:600px)').matches?'week':'day';
 function setScheduleMode(mode){scheduleMode=mode;const root=$("#day");root.classList.toggle("week-mode",mode==="week");$("#showWeekView").classList.toggle("active",mode==="week");$("#showDayView").classList.toggle("active",mode==="day");if(mode==="week")renderWeek();else renderDay()}
