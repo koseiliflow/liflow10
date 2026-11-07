@@ -1293,7 +1293,8 @@ initAuth();
  #day.week-mode .week-view{display:block}
  #day.week-mode .day-toolbar,#day.week-mode .schedule-editor,#day.week-mode .day-layout{display:none!important}
  #day .week-grid{gap:6px;grid-template-rows:repeat(2,minmax(112px,auto))}
- #day .week-day{min-height:112px;padding:6px;border-radius:10px;gap:4px}
+ #day .week-grid{grid-template-rows:repeat(2,140px)}
+ #day .week-day{min-height:112px;max-height:140px;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:6px;border-radius:10px;gap:4px}
  #day .week-day-name{font-size:11px}
  #day .week-entry{font-size:9px;padding:3px 4px}
  #day .week-entry-time{font-size:8px}
