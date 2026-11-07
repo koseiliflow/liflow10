@@ -772,19 +772,20 @@ function renderWeek(){
  const html=days.map((date,i)=>{
   const dateKey=key(date),dayEvents=getEventsForDate(dateKey);
   const linkedIds=new Set(dayEvents.filter(e=>e.taskId!=null).map(e=>String(e.taskId)));
-  const eventItems=dayEvents.map(ev=>({kind:ev.taskId!=null?"task":"event",time:ev.allDay?"":(ev.start||""),title:ev.title,tag:ev.tag||"その他",allDay:!!ev.allDay,taskId:ev.taskId,detail:ev.allDay?"終日":(ev.start&&ev.end?`${ev.start}–${ev.end}`:"予定")}));
-  const taskItems=tasks.filter(t=>!t.done&&((t.plannedDate===dateKey)||(!t.plannedDate&&t.dueDate===dateKey))).filter(t=>!linkedIds.has(String(t.id))).map(t=>({kind:"task",time:"",title:t.title,tag:t.tag||"その他",detail:t.dueDate===dateKey&&!t.plannedDate?"締切":"タスク"}));
+  const eventItems=dayEvents.map(ev=>{const linked=tasks.find(t=>String(t.id)===String(ev.taskId));return {kind:ev.taskId!=null?"task":"event",time:ev.allDay?"":(ev.start||""),title:ev.title,tag:ev.tag||"その他",allDay:!!ev.allDay,taskId:ev.taskId,done:!!linked?.done,detail:ev.allDay?"終日":(ev.start&&ev.end?`${ev.start}–${ev.end}`:"予定")}});
+  const taskItems=tasks.filter(t=>((t.plannedDate===dateKey)||(!t.plannedDate&&t.dueDate===dateKey))).filter(t=>!linkedIds.has(String(t.id))).map(t=>({kind:"task",time:"",title:t.title,tag:t.tag||"その他",taskId:t.id,done:!!t.done,detail:t.dueDate===dateKey&&!t.plannedDate?"締切":"タスク"}));
   const entries=[...eventItems,...taskItems].sort((a,b)=>{
    if(a.time&&b.time)return a.time.localeCompare(b.time);
    if(a.time)return -1;if(b.time)return 1;
    return a.kind==="event"&&b.kind!=="event"?-1:b.kind==="event"&&a.kind!=="event"?1:0;
   });
-  const content=entries.map(item=>`<div class="week-entry ${item.kind}-entry" style="${tagInline(item.tag)}"><span class="week-entry-time">${item.time?esc(item.time):item.detail==="終日"?"終日":item.kind==="task"?"時刻未定":"予定"}</span><span class="week-entry-title">${esc(item.title)}</span>${item.detail&&item.detail!=="終日"&&item.detail!=="予定"?`<span class="week-entry-meta">${esc(item.detail)}</span>`:""}</div>`).join("");
+  const content=entries.map(item=>`<div class="week-entry ${item.kind}-entry ${item.done?"week-entry-done":""}" style="${tagInline(item.tag)}">${item.kind==="task"&&item.taskId!=null?`<input class="week-task-check" type="checkbox" data-week-task="${esc(item.taskId)}" ${item.done?"checked":""} aria-label="${esc(item.title)}を完了">`:""}<span class="week-entry-time">${item.time?esc(item.time):item.detail==="終日"?"終日":item.kind==="task"?"時刻未定":"予定"}</span><span class="week-entry-title">${esc(item.title)}</span>${item.detail&&item.detail!=="終日"&&item.detail!=="予定"?`<span class="week-entry-meta">${esc(item.detail)}</span>`:""}</div>`).join("");
   return `<div class="week-day ${dateKey===key(today)?"week-today":""}" data-week-date="${dateKey}"><div class="week-day-head"><span class="week-day-name">${dayNames[i]}</span><span class="week-day-date">${date.getMonth()+1}/${date.getDate()}</span></div>${content||'<div class="week-empty">予定・タスクなし</div>'}</div>`;
  }).join("");
  const undated=tasks.filter(t=>!t.done&&!t.plannedDate&&!events.some(ev=>String(ev.taskId)===String(t.id)));
  const undatedHtml=undated.map(t=>`<div class="week-entry task-entry" style="${tagInline(t.tag)}"><span class="week-entry-time">日付未定</span><span class="week-entry-title">${esc(t.title)}</span><span class="week-entry-meta">${t.minutes}分 · ${esc(t.tag||"その他")}</span></div>`).join("");
  $("#weekGrid").innerHTML=html+`<div class="week-day week-undated" data-week-undated="true"><div class="week-day-head"><span class="week-day-name">未定</span><span class="week-day-date">${undated.length}件</span></div>${undatedHtml||'<div class="week-empty">未配置タスクなし</div>'}</div>`;
+ $ ("#weekGrid [data-week-task]").forEach(input=>input.onchange=()=>{const task=tasks.find(t=>String(t.id)===String(input.dataset.weekTask));if(task){task.done=input.checked;renderAll()}});
 }
 $("#showWeekView").onclick=()=>setScheduleMode("week");$("#showDayView").onclick=()=>setScheduleMode("day");
 $("#prevWeek").onclick=()=>{selectedDate=shiftDate(selectedDate,-7);saveData();renderWeek()};
@@ -1302,4 +1303,10 @@ initAuth();
  #day .week-toolbar strong{font-size:11px;white-space:nowrap}
 }
 @media(min-width:601px){#day .schedule-mode-toolbar,#day .week-view{display:none!important}}
+
+#day .week-entry{position:relative;padding-left:5px}
+#day .week-entry:has(.week-task-check){padding-left:21px}
+#day .week-task-check{position:absolute;left:4px;top:5px;width:13px;height:13px;margin:0;accent-color:var(--green)}
+#day .week-entry-done .week-entry-title{text-decoration:line-through;opacity:.65}
+#day .week-entry-done{opacity:.72}
 </style>
