@@ -785,13 +785,13 @@ function renderWeek(){
  const undated=tasks.filter(t=>!t.done&&!t.plannedDate&&!events.some(ev=>String(ev.taskId)===String(t.id)));
  const undatedHtml=undated.map(t=>`<div class="week-entry task-entry" style="${tagInline(t.tag)}"><span class="week-entry-time">日付未定</span><span class="week-entry-title">${esc(t.title)}</span><span class="week-entry-meta">${t.minutes}分 · ${esc(t.tag||"その他")}</span></div>`).join("");
  $("#weekGrid").innerHTML=html+`<div class="week-day week-undated" data-week-undated="true"><div class="week-day-head"><span class="week-day-name">未定</span><span class="week-day-date">${undated.length}件</span></div>${undatedHtml||'<div class="week-empty">未配置タスクなし</div>'}</div>`;
- $ ("#weekGrid [data-week-task]").forEach(input=>input.onchange=()=>{const task=tasks.find(t=>String(t.id)===String(input.dataset.weekTask));if(task){task.done=input.checked;renderAll()}});
+ document.querySelectorAll("#weekGrid [data-week-task]").forEach(input=>input.onchange=()=>{const task=tasks.find(t=>String(t.id)===String(input.dataset.weekTask));if(task){task.done=input.checked;renderAll()}});
 }
 $("#showWeekView").onclick=()=>setScheduleMode("week");$("#showDayView").onclick=()=>setScheduleMode("day");
 $("#prevWeek").onclick=()=>{selectedDate=shiftDate(selectedDate,-7);saveData();renderWeek()};
 $("#nextWeek").onclick=()=>{selectedDate=shiftDate(selectedDate,7);saveData();renderWeek()};
 $("#thisWeek").onclick=()=>{selectedDate=new Date(today);saveData();renderWeek()};
-function switchView(name){$(".view").forEach(v=>v.classList.toggle("show",v.id===name));$(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.view===name));$("#pageTitle").textContent=({home:"今日も、いい一日に。",tasks:"タスクを整理する。",day:"時間を、デザインする。",month:"先の予定まで見渡す。",focus:"目の前のことに、集中する。"})[name];if(name==="day")setScheduleMode(scheduleMode)}
+function switchView(name){document.querySelectorAll(".view").forEach(v=>v.classList.toggle("show",v.id===name));document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.view===name));$("#pageTitle").textContent=({home:"今日も、いい一日に。",tasks:"タスクを整理する。",day:"時間を、デザインする。",month:"先の予定まで見渡す。",focus:"目の前のことに、集中する。"})[name];if(name==="day")setScheduleMode(scheduleMode)}
 $$(".nav button").forEach(b=>b.onclick=()=>switchView(b.dataset.view));$$("[data-go]").forEach(b=>b.onclick=()=>switchView(b.dataset.go));
 function renderHome(){$("#homeEvents").textContent=getEventsForDate(key(today)).length;let sec=sessions.filter(s=>s.date===key(today)).reduce((a,s)=>a+s.seconds,0);$("#homeStudy").textContent=`${Math.floor(sec/60)}分`;
 const todayKey=key(today);
