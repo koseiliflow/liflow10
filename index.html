@@ -1305,6 +1305,26 @@ initAuth();
 }
 @media(min-width:601px){#day .schedule-mode-toolbar,#day .week-view{display:none!important}}
 
+/* Expanded iPhone weekly board: use the full usable screen */
+@media(max-width:600px){
+ body:has(#day.week-mode) main{padding:0!important}
+ body:has(#day.week-mode) main>.top{display:none!important}
+ #day.week-mode .schedule-mode-toolbar{position:fixed;z-index:6;top:env(safe-area-inset-top,0px);left:0;right:0;height:42px;margin:0;padding:4px 12px;background:var(--bg);border-bottom:1px solid var(--accent-line)}
+ #day.week-mode .week-view{display:flex;position:fixed;z-index:4;top:calc(env(safe-area-inset-top,0px) + 42px);right:0;bottom:calc(62px + env(safe-area-inset-bottom,0px));left:0;flex-direction:column;gap:8px;padding:8px 9px 10px;background:var(--bg);overflow:hidden}
+ #day.week-mode .week-toolbar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:5px;margin:0;padding:0 1px}
+ #day.week-mode .week-grid{flex:1 1 auto;min-height:0;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:7px}
+ #day.week-mode .week-day{min-height:0;max-height:none;height:100%;padding:8px 6px;border-radius:11px;gap:6px;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+ #day.week-mode .week-day-name{font-size:13px}
+ #day.week-mode .week-day-date{font-size:11px}
+ #day.week-mode .week-entry{font-size:11px;line-height:1.35;padding:6px 5px}
+ #day.week-mode .week-entry-time{font-size:10px}
+ #day.week-mode .week-entry-meta{font-size:10px}
+ #day.week-mode .week-task-check{width:15px;height:15px}
+ #day.week-mode .week-entry:has(.week-task-check){padding-left:23px}
+ #day.week-mode .week-help{display:none}
+}
+
+
 #day .week-entry{position:relative;padding-left:5px}
 #day .week-entry:has(.week-task-check){padding-left:21px}
 #day .week-task-check{position:absolute;left:4px;top:5px;width:13px;height:13px;margin:0;accent-color:var(--green)}
