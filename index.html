@@ -343,7 +343,8 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
 </div>
 </section>
 <section id="day" class="view">
-<div class="toolbar"><button class="btn light small" id="prevDay">← 前日</button><button class="btn light small" id="todayBtn">今日</button><button class="btn light small" id="nextDay">翌日 →</button><strong id="dayTitle"></strong><span class="muted">タスクは時間帯へドラッグして配置できます</span></div>
+<div class="toolbar schedule-mode-toolbar"><div class="schedule-mode-switch"><button type="button" class="btn light small" id="showWeekView">週表示</button><button type="button" class="btn light small" id="showDayView">日表示</button></div></div>
+<div class="toolbar day-toolbar"><button class="btn light small" id="prevDay">← 前日</button><button class="btn light small" id="todayBtn">今日</button><button class="btn light small" id="nextDay">翌日 →</button><strong id="dayTitle"></strong><span class="muted">タスクは時間帯へドラッグして配置できます</span></div>
 <div class="card schedule-editor" style="display:none">
   <div class="sectionhead"><h2>予定を追加</h2><span class="muted" style="font-size:11px">5分単位で設定できます</span></div>
   <form id="eventForm" class="schedule-form">
@@ -360,6 +361,7 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
   <div class="tag-legend" aria-label="タグの色分け"><span class="tag-dot" style="background:#edf1fa;color:#60769a">学校</span><span class="tag-dot" style="background:#e8f2ec;color:#52755e">勉強</span><span class="tag-dot" style="background:#fff0e4;color:#a16d42">部活</span><span class="tag-dot" style="background:#f3edf7;color:#80618d">プライベート</span><span class="tag-dot" style="background:#eff1ef;color:#68756d">その他</span></div>
   <p class="schedule-help">タイムラインの時間帯をクリックすると、開始時刻を入力欄に反映できます。タスクのドラッグ配置も5分単位で指定できます。</p>
 </div>
+<div id="weekView" class="week-view"><div class="toolbar week-toolbar"><button type="button" class="btn light small" id="prevWeek">← 前週</button><button type="button" class="btn light small" id="thisWeek">今週</button><strong id="weekTitle"></strong><button type="button" class="btn light small" id="nextWeek">翌週 →</button></div><div id="weekGrid" class="week-grid"></div><p class="week-help">未配置タスクは画面左端から一覧を開き、長押しして曜日へ移動できます。</p></div>
 <div class="day-layout"><div class="card task-pool"><h2>未配置のタスク</h2><div id="taskPoolFilters" class="task-pool-filters"></div><div id="taskPool"></div></div><div class="timeline"><div class="timeline-head"><b>1日のタイムライン</b><span class="muted">05:00 — 24:00</span></div><div id="allDayEvents" style="padding:0 10px"></div><div id="timeSlots" class="timeline-body"></div></div></div>
 </section>
 <section id="month" class="view">
@@ -759,7 +761,36 @@ function tagInline(tag){let c=tagStyle(tag);return `background:${c.bg};border-co
 function shortDate(dateString){if(!dateString)return "";let [y,m,d]=dateString.split("-").map(Number);return `${m}/${d}`}
 function renderAll(){saveData();renderHome();renderTasks();renderDay();renderMonth();renderTimerOptions();renderSessions()}
 $("#todayLabel").textContent=fmtDate(today);
-function switchView(name){$$(".view").forEach(v=>v.classList.toggle("show",v.id===name));$$(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.view===name));$("#pageTitle").textContent=({home:"今日も、いい一日に。",tasks:"タスクを整理する。",day:"時間を、デザインする。",month:"先の予定まで見渡す。",focus:"目の前のことに、集中する。"})[name];if(name==="day")renderDay()}
+let scheduleMode=window.matchMedia('(max-width:600px)').matches?'week':'day';
+function setScheduleMode(mode){scheduleMode=mode;const root=$("#day");root.classList.toggle("week-mode",mode==="week");$("#showWeekView").classList.toggle("active",mode==="week");$("#showDayView").classList.toggle("active",mode==="day");if(mode==="week")renderWeek();else renderDay()}
+function startOfWeek(date){const d=new Date(date);d.setHours(12,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7));return d}
+function shiftDate(date,days){const d=new Date(date);d.setDate(d.getDate()+days);return d}
+function renderWeek(){
+ const start=startOfWeek(selectedDate),days=Array.from({length:7},(_,i)=>shiftDate(start,i));
+ const end=days[6];$("#weekTitle").textContent=`${start.getFullYear()}/${start.getMonth()+1}/${start.getDate()}〜${end.getMonth()+1}/${end.getDate()}`;
+ const dayNames=["月","火","水","木","金","土","日"];
+ const html=days.map((date,i)=>{
+  const dateKey=key(date),dayEvents=getEventsForDate(dateKey);
+  const linkedIds=new Set(dayEvents.filter(e=>e.taskId!=null).map(e=>String(e.taskId)));
+  const eventItems=dayEvents.map(ev=>({kind:ev.taskId!=null?"task":"event",time:ev.allDay?"":(ev.start||""),title:ev.title,tag:ev.tag||"その他",allDay:!!ev.allDay,taskId:ev.taskId,detail:ev.allDay?"終日":(ev.start&&ev.end?`${ev.start}–${ev.end}`:"予定")}));
+  const taskItems=tasks.filter(t=>!t.done&&((t.plannedDate===dateKey)||(!t.plannedDate&&t.dueDate===dateKey))).filter(t=>!linkedIds.has(String(t.id))).map(t=>({kind:"task",time:"",title:t.title,tag:t.tag||"その他",detail:t.dueDate===dateKey&&!t.plannedDate?"締切":"タスク"}));
+  const entries=[...eventItems,...taskItems].sort((a,b)=>{
+   if(a.time&&b.time)return a.time.localeCompare(b.time);
+   if(a.time)return -1;if(b.time)return 1;
+   return a.kind==="event"&&b.kind!=="event"?-1:b.kind==="event"&&a.kind!=="event"?1:0;
+  });
+  const content=entries.map(item=>`<div class="week-entry ${item.kind}-entry" style="${tagInline(item.tag)}"><span class="week-entry-time">${item.time?esc(item.time):item.detail==="終日"?"終日":item.kind==="task"?"時刻未定":"予定"}</span><span class="week-entry-title">${esc(item.title)}</span>${item.detail&&item.detail!=="終日"&&item.detail!=="予定"?`<span class="week-entry-meta">${esc(item.detail)}</span>`:""}</div>`).join("");
+  return `<div class="week-day ${dateKey===key(today)?"week-today":""}" data-week-date="${dateKey}"><div class="week-day-head"><span class="week-day-name">${dayNames[i]}</span><span class="week-day-date">${date.getMonth()+1}/${date.getDate()}</span></div>${content||'<div class="week-empty">予定・タスクなし</div>'}</div>`;
+ }).join("");
+ const undated=tasks.filter(t=>!t.done&&!t.plannedDate&&!events.some(ev=>String(ev.taskId)===String(t.id)));
+ const undatedHtml=undated.map(t=>`<div class="week-entry task-entry" style="${tagInline(t.tag)}"><span class="week-entry-time">日付未定</span><span class="week-entry-title">${esc(t.title)}</span><span class="week-entry-meta">${t.minutes}分 · ${esc(t.tag||"その他")}</span></div>`).join("");
+ $("#weekGrid").innerHTML=html+`<div class="week-day week-undated" data-week-undated="true"><div class="week-day-head"><span class="week-day-name">未定</span><span class="week-day-date">${undated.length}件</span></div>${undatedHtml||'<div class="week-empty">未配置タスクなし</div>'}</div>`;
+}
+$("#showWeekView").onclick=()=>setScheduleMode("week");$("#showDayView").onclick=()=>setScheduleMode("day");
+$("#prevWeek").onclick=()=>{selectedDate=shiftDate(selectedDate,-7);saveData();renderWeek()};
+$("#nextWeek").onclick=()=>{selectedDate=shiftDate(selectedDate,7);saveData();renderWeek()};
+$("#thisWeek").onclick=()=>{selectedDate=new Date(today);saveData();renderWeek()};
+function switchView(name){$(".view").forEach(v=>v.classList.toggle("show",v.id===name));$(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.view===name));$("#pageTitle").textContent=({home:"今日も、いい一日に。",tasks:"タスクを整理する。",day:"時間を、デザインする。",month:"先の予定まで見渡す。",focus:"目の前のことに、集中する。"})[name];if(name==="day")setScheduleMode(scheduleMode)}
 $$(".nav button").forEach(b=>b.onclick=()=>switchView(b.dataset.view));$$("[data-go]").forEach(b=>b.onclick=()=>switchView(b.dataset.go));
 function renderHome(){$("#homeEvents").textContent=getEventsForDate(key(today)).length;let sec=sessions.filter(s=>s.date===key(today)).reduce((a,s)=>a+s.seconds,0);$("#homeStudy").textContent=`${Math.floor(sec/60)}分`;
 const todayKey=key(today);
@@ -1122,8 +1153,10 @@ function renderMonth(){let y=monthDate.getFullYear(),m=monthDate.getMonth();$('#
   if(!drag?.active)return;
   const target=document.elementFromPoint(x,y);
   const cell=target?.closest('#monthGrid [data-date]');
+  const weekCell=target?.closest('#weekGrid [data-week-date]');
   const layer=target?.closest('#eventLayer');
   if(cell&&$('#month').classList.contains('show')){placeOnMonth(drag.task,cell.dataset.date);closeDrawer();renderAll();return}
+  if(weekCell&&$('#day').classList.contains('show')&&$('#day').classList.contains('week-mode')){const task=tasks.find(t=>String(t.id)===String(drag.task.id));if(task){task.plannedDate=weekCell.dataset.weekDate;events.filter(ev=>String(ev.taskId)===String(task.id)).forEach(ev=>{ev.date=weekCell.dataset.weekDate});closeDrawer();renderAll();return}}
   if(layer&&$('#day').classList.contains('show')){
    const rect=layer.getBoundingClientRect(),minute=5*60+(y-rect.top);
    if(placeOnDay(drag.task,key(selectedDate),minute)){closeDrawer();renderAll();return}
@@ -1146,7 +1179,7 @@ function renderMonth(){let y=monthDate.getFullYear(),m=monthDate.getMonth();$('#
   if(!drag.active){if(Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)>10)cleanupDrag();return}
   e.preventDefault();moveGhost(e.clientX,e.clientY);clearDropHighlight();
   const target=document.elementFromPoint(e.clientX,e.clientY);
-  const drop=target?.closest('#monthGrid [data-date], #eventLayer');if(drop)drop.classList.add('mobile-drop-target')
+  const drop=target?.closest('#monthGrid [data-date], #weekGrid [data-week-date], #eventLayer');if(drop)drop.classList.add('mobile-drop-target')
  },{passive:false});
  document.addEventListener('pointerup',e=>{
   if(edgeStart&&e.pointerId===edgeStart.id)edgeStart=null;
@@ -1230,4 +1263,43 @@ initAuth();
 #focus #sessionList{height:280px;min-height:0;max-height:none;flex:0 0 auto;overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;padding:0 7px 0 0;border:0;border-radius:0;background:transparent}
 #focus #sessionList .taskrow{min-width:0}
 @media(max-width:600px){#focus #sessionList{height:clamp(90px,18dvh,140px)}}
+
+/* Weekly overview: mobile-first 4x2 week board */
+.schedule-mode-toolbar{justify-content:flex-start;margin:0 0 10px}
+.schedule-mode-switch{display:flex;gap:6px}
+.schedule-mode-switch button.active{background:var(--green);color:#fff;border-color:var(--green)}
+.week-view{display:none}
+.week-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,minmax(132px,auto));gap:7px}
+.week-day{min-width:0;min-height:132px;border:1px solid var(--accent-border);border-radius:12px;background:var(--card,#fff);padding:7px;display:flex;flex-direction:column;gap:5px;overflow:hidden;transition:background .15s,border-color .15s}
+.week-day.week-undated{border-style:dashed;background:var(--accent-tint)}
+.week-day.week-today{box-shadow:inset 0 0 0 1px var(--green)}
+.week-day.mobile-drop-target{background:var(--accent-hover);border:2px solid var(--green)}
+.week-day-head{display:flex;align-items:center;justify-content:space-between;gap:3px;border-bottom:1px solid var(--accent-line);padding-bottom:5px}
+.week-day-name{font-size:12px;font-weight:750}
+.week-day-date{font-size:10px;color:var(--muted)}
+.week-entry{min-width:0;border-radius:6px;padding:4px 5px;background:var(--accent-tint);border:1px solid var(--accent-line);font-size:10px;line-height:1.3;overflow-wrap:anywhere}
+.week-entry.event-entry{background:color-mix(in srgb,var(--green) 13%,white)}
+.week-entry.task-entry{background:color-mix(in srgb,var(--green) 7%,white)}
+.week-entry-time{display:block;font-size:9px;font-weight:700;color:var(--accent-ink);margin-bottom:2px}
+.week-entry-title{display:block;font-weight:600}
+.week-entry-meta{display:block;color:var(--muted);font-size:9px;margin-top:2px}
+.week-empty{font-size:10px;color:var(--muted);padding:4px 1px}
+.week-help{font-size:10px;color:var(--muted);margin:8px 2px 0}
+@media(max-width:600px){
+ #day .schedule-mode-toolbar{margin-bottom:8px}
+ #day .schedule-mode-switch{width:100%}
+ #day .schedule-mode-switch button{flex:1}
+ #day.week-mode .week-view{display:block}
+ #day.week-mode .day-toolbar,#day.week-mode .schedule-editor,#day.week-mode .day-layout{display:none!important}
+ #day .week-grid{gap:6px;grid-template-rows:repeat(2,minmax(112px,auto))}
+ #day .week-day{min-height:112px;padding:6px;border-radius:10px;gap:4px}
+ #day .week-day-name{font-size:11px}
+ #day .week-entry{font-size:9px;padding:3px 4px}
+ #day .week-entry-time{font-size:8px}
+ #day .week-entry-meta{font-size:8px}
+ #day .week-toolbar{gap:5px;flex-wrap:nowrap}
+ #day .week-toolbar .btn{padding:7px 8px;font-size:10px}
+ #day .week-toolbar strong{font-size:11px;white-space:nowrap}
+}
+@media(min-width:601px){#day .schedule-mode-toolbar,#day .week-view{display:none!important}}
 </style>
