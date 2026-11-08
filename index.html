@@ -1307,8 +1307,8 @@ initAuth();
 
 /* Expanded iPhone weekly board: use the full usable screen */
 @media(max-width:600px){
- body:has(#day.week-mode) main{padding:0!important}
- body:has(#day.week-mode) main>.top{display:none!important}
+ body:has(#day.week-mode.show) main{padding:0!important}
+ body:has(#day.week-mode.show) main>.top{display:none!important}
  #day.week-mode .schedule-mode-toolbar{position:fixed;z-index:6;top:env(safe-area-inset-top,0px);left:0;right:0;height:42px;margin:0;padding:4px 12px;background:var(--bg);border-bottom:1px solid var(--accent-line)}
  #day.week-mode .week-view{display:flex;position:fixed;z-index:4;top:calc(env(safe-area-inset-top,0px) + 42px);right:0;bottom:calc(62px + env(safe-area-inset-bottom,0px));left:0;flex-direction:column;gap:8px;padding:8px 9px 10px;background:var(--bg);overflow:hidden}
  #day.week-mode .week-toolbar{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:5px;margin:0;padding:0 1px}
