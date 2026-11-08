@@ -1373,4 +1373,45 @@ initAuth();
 #day .week-task-check{position:absolute;left:4px;top:5px;width:13px;height:13px;margin:0;accent-color:var(--green)}
 #day .week-entry-done .week-entry-title{text-decoration:line-through;opacity:.65}
 #day .week-entry-done{opacity:.72}
+/* Final override: horizontal weekly cards on iPhone (after all legacy rules) */
+@media(max-width:600px){
+ #day.week-mode .week-grid{
+  display:grid;
+  grid-template-columns:none!important;
+  grid-template-rows:minmax(0,1fr)!important;
+  grid-auto-flow:column!important;
+  grid-auto-columns:minmax(78vw,78vw)!important;
+  gap:10px!important;
+  width:100%;
+  height:100%;
+  min-width:0;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  overscroll-behavior-x:contain;
+  -webkit-overflow-scrolling:touch;
+  scroll-snap-type:x mandatory;
+  padding:1px 2px 8px;
+ }
+ #day.week-mode .week-day{
+  width:100%;
+  min-width:0;
+  height:100%;
+  min-height:0;
+  max-height:none!important;
+  overflow-x:hidden;
+  overflow-y:auto;
+  scroll-snap-align:start;
+  scroll-snap-stop:always;
+  padding:12px 10px;
+  gap:9px;
+ }
+ #day.week-mode .week-day-head{padding-bottom:9px}
+ #day.week-mode .week-day-name{font-size:16px}
+ #day.week-mode .week-day-date{font-size:13px}
+ #day.week-mode .week-entry{font-size:13px;line-height:1.45;padding:9px 8px}
+ #day.week-mode .week-entry-time{font-size:11px}
+ #day.week-mode .week-entry-meta{font-size:11px}
+ #day.week-mode .week-task-check{width:17px;height:17px}
+ #day.week-mode .week-entry:has(.week-task-check){padding-left:29px}
+}
 </style>
