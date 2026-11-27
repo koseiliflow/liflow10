@@ -1055,7 +1055,7 @@ function renderWeek(){
   };
   const onPointerUp=e=>{
    if(!pending||pending.pointerId!==e.pointerId)return;
-   const current=pending;
+   const current=pending,wasMoved=moved;
    if(moved){
     const target=document.elementFromPoint(e.clientX,e.clientY)?.closest("[data-week-lane]")||[...grid.querySelectorAll("[data-week-lane]")].find(l=>{const r=l.getBoundingClientRect();return e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom});
     const t=tasks.find(x=>String(x.id)===String(current.id));
@@ -1074,7 +1074,7 @@ function renderWeek(){
    }
    try{current.item.releasePointerCapture(e.pointerId)}catch(_){}
    clearDrag();
-   if(moved)renderAll();
+   if(wasMoved)renderAll();
   };
   grid.addEventListener("pointerdown",onPointerDown,{passive:false});
   grid.addEventListener("pointermove",onPointerMove,{passive:false});
