@@ -1078,7 +1078,7 @@ function renderWeek(){
  });
  $$("#weekGrid [data-week-task-open]").forEach(el=>el.onclick=e=>{e.stopPropagation();if(el.closest("[data-week-alltask]")?.dataset.dragMoved==="1"){el.closest("[data-week-alltask]").dataset.dragMoved="0";return}openTaskEditor(el.dataset.weekTaskOpen)});
  $$("#weekGrid [data-week-task-check]").forEach(el=>el.onchange=()=>{const t=tasks.find(x=>String(x.id)===String(el.dataset.weekTaskCheck));if(t){t.done=el.checked;renderAll()}});
- $($("#weekGrid [data-week-drag-task]")).forEach(el=>{el.ondragstart=e=>{const t=tasks.find(x=>String(x.id)===String(el.dataset.weekDragTask));timelineDragDuration=t?.minutes||60;e.dataTransfer.setData("text/plain","task:"+el.dataset.weekDragTask);e.dataTransfer.effectAllowed="move";el.classList.add("is-dragging")};el.ondragend=()=>{el.classList.remove("is-dragging");$($("#weekGrid [data-week-lane]")).forEach(l=>l.classList.remove("is-drop-target"));document.getSelection?.()?.removeAllRanges();el.dataset.dragMoved="1";requestAnimationFrame(()=>{el.dataset.dragMoved="0"})}});
+ $("#weekGrid [data-week-drag-task]").forEach(el=>{el.ondragstart=e=>{const t=tasks.find(x=>String(x.id)===String(el.dataset.weekDragTask));timelineDragDuration=t?.minutes||60;e.dataTransfer.setData("text/plain","task:"+el.dataset.weekDragTask);e.dataTransfer.effectAllowed="move";el.classList.add("is-dragging")};el.ondragend=()=>{el.classList.remove("is-dragging");$("#weekGrid [data-week-lane]").forEach(l=>l.classList.remove("is-drop-target"));document.getSelection?.()?.removeAllRanges();el.dataset.dragMoved="1";requestAnimationFrame(()=>{el.dataset.dragMoved="0"})}});
  if(!grid.dataset.touchTaskDragBound){
   grid.dataset.touchTaskDragBound="1";
   let pending=null,ghost=null,moved=false;
