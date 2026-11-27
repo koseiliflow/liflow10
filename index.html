@@ -487,7 +487,7 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
 @media(max-width:600px){
  #day.week-mode #weekGrid.week-grid.is-zoomed{overflow-x:auto!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch}
  #day.week-mode #weekGrid.is-zoomed .week-calendar{width:max-content!important;min-width:max-content!important}
- #day.week-mode #weekGrid.is-zoomed .week-days-track{flex:0 0 calc((100vw - 42px)*7/3)!important;width:calc(233.333vw - 98px)!important;min-width:calc(233.333vw - 98px)!important}
+ #day.week-mode #weekGrid.is-zoomed .week-days-track{flex:0 0 calc(233.333vw - 98px)!important;width:calc(233.333vw - 98px)!important;min-width:calc(233.333vw - 98px)!important}
  #day.week-mode #weekGrid.is-zoomed .week-timeline-day:not(.week-undated){flex:0 0 calc(33.333vw - 14px)!important;width:calc(33.333vw - 14px)!important;min-width:calc(33.333vw - 14px)!important}
  #day.week-mode #weekGrid.is-zoomed .week-undated{left:100%!important}
  #day.week-mode #weekGrid.is-zoomed .week-timeline-event small{display:block!important}
@@ -990,6 +990,7 @@ function renderWeek(){
  const hourPx=baseHourPx*weekZoomLevel,laneHeight=hourPx*19;
  const hourLines=`repeating-linear-gradient(to bottom,transparent 0,transparent ${hourPx-1}px,var(--accent-line) ${hourPx-1}px,var(--accent-line) ${hourPx}px)`;
  const dayStart=5*60,dayEnd=24*60;
+ const weekTimeAtY=(lane,y)=>{const rect=lane.getBoundingClientRect(),ratio=Math.max(0,Math.min(1,(y-rect.top)/Math.max(1,rect.height)));return Math.max(dayStart,Math.min(dayEnd-5,dayStart+Math.round((ratio*(dayEnd-dayStart))/5)*5))};
  const axis=Array.from({length:20},(_,i)=>i).map(h=>h===19?"":`<span style="top:${h*hourPx-7}px">${String(h+5).padStart(2,"0")}:00</span>`).join("");
  const columns=days.map((date,i)=>{
   const dateKey=key(date),dayEvents=getEventsForDate(dateKey);
@@ -1020,8 +1021,8 @@ function renderWeek(){
  if(!grid.dataset.pinchBound){
   grid.dataset.pinchBound="1";
   grid.addEventListener("touchstart",e=>{if(e.touches.length===2){weekPinchStart=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);weekPinchBase=weekZoomLevel;grid.classList.add("is-pinching")}},{passive:true});
-  grid.addEventListener("touchmove",e=>{if(e.touches.length===2&&weekPinchStart){e.preventDefault();const distance=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);weekZoomLevel=Math.max(1,Math.min(3.5,weekPinchBase*distance/weekPinchStart));const visualScale=weekZoomLevel/weekPinchBase;grid.querySelectorAll(".week-axis-hours,.week-timeline-lane").forEach(el=>{el.style.transformOrigin="top left";el.style.transform=`scaleY(${visualScale})`;el.style.willChange="transform"});grid.classList.toggle("is-zoomed",weekZoomLevel>1.02)}},{passive:false});
-  grid.addEventListener("touchend",e=>{if(e.touches.length<2&&weekPinchStart){weekPinchStart=0;grid.classList.remove("is-pinching");renderWeek()}},{passive:true});
+  grid.addEventListener("touchmove",e=>{if(e.touches.length===2&&weekPinchStart){e.preventDefault();const distance=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);weekZoomLevel=Math.max(1,Math.min(3,weekPinchBase*distance/weekPinchStart));const visualScale=weekZoomLevel/weekPinchBase;const calendar=grid.querySelector(".week-calendar");if(calendar){calendar.style.transformOrigin="top left";calendar.style.transform=`scaleY(${visualScale})`;calendar.style.willChange="transform"}grid.classList.toggle("is-zoomed",weekZoomLevel>1.02)}},{passive:false});
+  const finishPinch=()=>{if(weekPinchStart){weekPinchStart=0;grid.classList.remove("is-pinching");renderWeek()}};grid.addEventListener("touchend",e=>{if(e.touches.length<2)finishPinch()},{passive:true});grid.addEventListener("touchcancel",finishPinch,{passive:true});
  }
  $("#weekGrid [data-week-event]").forEach(el=>el.onclick=()=>showEventDetail(el.dataset.weekEvent,el.dataset.weekDate));
  $("#weekGrid [data-week-alltask]").forEach(el=>el.onclick=e=>{if(el.dataset.dragMoved==="1"){el.dataset.dragMoved="0";e.preventDefault();return}const t=tasks.find(x=>String(x.id)===String(el.dataset.weekAlltask));if(t){t.done=!t.done;renderAll()}});
@@ -1029,40 +1030,63 @@ function renderWeek(){
  if(!grid.dataset.touchTaskDragBound){
   grid.dataset.touchTaskDragBound="1";
   let pending=null,ghost=null,moved=false;
-  grid.addEventListener("pointerdown",e=>{
+  const clearDrag=()=>{
+   if(pending?.item)pending.item.classList.remove("is-dragging");
+   grid.querySelectorAll(".week-timeline-lane").forEach(l=>l.classList.remove("is-drop-target"));
+   if(ghost)ghost.remove();
+   ghost=null;pending=null;moved=false;
+  };
+  const onPointerDown=e=>{
    const item=e.target.closest("[data-week-drag-task]");
    if(!item||e.pointerType==="mouse")return;
    pending={item,id:item.dataset.weekDragTask,x:e.clientX,y:e.clientY,pointerId:e.pointerId};
    moved=false;
-  },{passive:true});
-  grid.addEventListener("pointermove",e=>{
+   try{item.setPointerCapture(e.pointerId)}catch(_){}
+   e.preventDefault();
+  };
+  const onPointerMove=e=>{
    if(!pending||pending.pointerId!==e.pointerId)return;
-   if(!moved&&Math.hypot(e.clientX-pending.x,e.clientY-pending.y)<8)return;
+   if(!moved&&Math.hypot(e.clientX-pending.x,e.clientY-pending.y)<7)return;
    if(!moved){moved=true;pending.item.classList.add("is-dragging");ghost=document.createElement("div");ghost.className="week-task-drag-ghost";ghost.textContent=pending.item.textContent;ghost.style.background=getComputedStyle(pending.item).backgroundColor;ghost.style.color=getComputedStyle(pending.item).color;document.body.appendChild(ghost)}
    e.preventDefault();
    if(ghost){ghost.style.left=e.clientX+"px";ghost.style.top=e.clientY+"px"}
-   grid.querySelectorAll(".week-timeline-lane").forEach(l=>l.classList.toggle("is-drop-target",(()=>{const r=l.getBoundingClientRect();return e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom})()));
-  },{passive:false});
-  const finishTaskDrag=e=>{
-   if(!pending)return;
+   let target=null;
+   for(const lane of grid.querySelectorAll("[data-week-lane]")){const r=lane.getBoundingClientRect();const hit=e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom;lane.classList.toggle("is-drop-target",hit);if(hit)target=lane}
+  };
+  const onPointerUp=e=>{
+   if(!pending||pending.pointerId!==e.pointerId)return;
    const current=pending;
    if(moved){
-    const target=document.elementFromPoint(e.clientX,e.clientY)?.closest("[data-week-lane]");
-    if(target){const t=tasks.find(x=>String(x.id)===String(current.id));if(t){const rect=target.getBoundingClientRect(),raw=dayStart+(e.clientY-rect.top),at=Math.max(dayStart,Math.min(dayEnd-5,Math.round(raw/5)*5));if(at+t.minutes<=dayEnd){t.plannedDate=target.dataset.weekLane;events=events.filter(ev=>String(ev.taskId)!==String(t.id));events.push({id:eventSeq++,taskId:t.id,title:t.title,start:hm(at),end:hm(at+t.minutes),type:"task",tag:t.tag||"勉強",date:target.dataset.weekLane,repeat:"none",skipDates:[]});renderAll()}}}
+    const target=document.elementFromPoint(e.clientX,e.clientY)?.closest("[data-week-lane]")||[...grid.querySelectorAll("[data-week-lane]")].find(l=>{const r=l.getBoundingClientRect();return e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom});
+    const t=tasks.find(x=>String(x.id)===String(current.id));
+    if(target&&t){
+     const taskMinutes=Math.max(5,Number(t.minutes)||60);
+     const startAt=Math.min(weekTimeAtY(target,e.clientY),dayEnd-taskMinutes);
+     if(startAt>=dayStart&&startAt+taskMinutes<=dayEnd){
+      t.plannedDate=target.dataset.weekLane;
+      t.allDay=false;
+      events=events.filter(ev=>String(ev.taskId)!==String(t.id));
+      events.push({id:eventSeq++,taskId:t.id,title:t.title,start:hm(startAt),end:hm(startAt+taskMinutes),type:"task",tag:t.tag||"勉強",date:target.dataset.weekLane,repeat:"none",skipDates:[]});
+      saveData();
+     }
+    }
     current.item.dataset.dragMoved="1";
    }
-   current.item.classList.remove("is-dragging");
-   grid.querySelectorAll(".week-timeline-lane").forEach(l=>l.classList.remove("is-drop-target"));
-   if(ghost)ghost.remove();ghost=null;pending=null;moved=false;
+   try{current.item.releasePointerCapture(e.pointerId)}catch(_){}
+   clearDrag();
+   if(moved)renderAll();
   };
-  grid.addEventListener("pointerup",finishTaskDrag);
-  grid.addEventListener("pointercancel",finishTaskDrag);
+  grid.addEventListener("pointerdown",onPointerDown,{passive:false});
+  grid.addEventListener("pointermove",onPointerMove,{passive:false});
+  grid.addEventListener("pointerup",onPointerUp);
+  grid.addEventListener("pointercancel",onPointerUp);
+  document.addEventListener("pointerup",onPointerUp);
  }
  $$("#weekGrid [data-week-lane]").forEach(lane=>{
-  lane.onclick=e=>{if(e.target.closest(".week-timeline-event"))return;const rect=lane.getBoundingClientRect(),raw=dayStart+(e.clientY-rect.top),at=Math.max(dayStart,Math.min(dayEnd-5,Math.round(raw/5)*5));openSheet(lane.dataset.weekLane,hm(at),hm(Math.min(at+60,dayEnd)))};
+  lane.onclick=e=>{if(e.target.closest(".week-timeline-event"))return;const at=weekTimeAtY(lane,e.clientY);openSheet(lane.dataset.weekLane,hm(at),hm(Math.min(at+60,dayEnd)))};
   lane.ondragover=e=>{e.preventDefault();lane.classList.add("is-drop-target")};
   lane.ondragleave=()=>lane.classList.remove("is-drop-target");
-  lane.ondrop=e=>{e.preventDefault();lane.classList.remove("is-drop-target");const payload=e.dataTransfer.getData("text/plain");if(!payload.startsWith("task:"))return;const t=tasks.find(x=>String(x.id)===payload.slice(5));if(!t)return;const rect=lane.getBoundingClientRect(),raw=dayStart+(e.clientY-rect.top),at=Math.max(dayStart,Math.min(dayEnd-5,Math.round(raw/5)*5));if(at+t.minutes>dayEnd)return;t.plannedDate=lane.dataset.weekLane;events=events.filter(ev=>String(ev.taskId)!==String(t.id));events.push({id:eventSeq++,taskId:t.id,title:t.title,start:hm(at),end:hm(at+t.minutes),type:"task",tag:t.tag||"勉強",date:lane.dataset.weekLane,repeat:"none",skipDates:[]});renderAll()};
+  lane.ondrop=e=>{e.preventDefault();lane.classList.remove("is-drop-target");const payload=e.dataTransfer.getData("text/plain");if(!payload.startsWith("task:"))return;const t=tasks.find(x=>String(x.id)===payload.slice(5));if(!t)return;const at=weekTimeAtY(lane,e.clientY),taskMinutes=Math.max(5,Number(t.minutes)||60),startAt=Math.min(at,dayEnd-taskMinutes);if(startAt<dayStart||startAt+taskMinutes>dayEnd)return;t.plannedDate=lane.dataset.weekLane;t.allDay=false;events=events.filter(ev=>String(ev.taskId)!==String(t.id));events.push({id:eventSeq++,taskId:t.id,title:t.title,start:hm(startAt),end:hm(startAt+taskMinutes),type:"task",tag:t.tag||"勉強",date:lane.dataset.weekLane,repeat:"none",skipDates:[]});renderAll()};
  });
 }
 
