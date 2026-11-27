@@ -399,6 +399,89 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
  #day.week-mode #weekGrid.is-pinching .week-axis-hours,#day.week-mode #weekGrid.is-pinching .week-timeline-lane{transition:none!important;}
  #day.week-mode .week-axis-hours,#day.week-mode .week-timeline-lane{background-repeat:repeat!important;}
 }
+
+/* Repair weekly timeline container: prevent legacy 4-column grid from shrinking the 7 days */
+@media(max-width:600px){
+ #day.week-mode #weekGrid.week-grid{
+  display:block!important;
+  grid-template-columns:none!important;
+  grid-template-rows:none!important;
+  grid-auto-flow:initial!important;
+  grid-auto-columns:auto!important;
+  width:100%!important;
+  min-width:0!important;
+  height:100%!important;
+  min-height:0!important;
+  overflow-x:hidden!important;
+  overflow-y:hidden!important;
+  padding:0!important;
+ }
+ #day.week-mode #weekGrid .week-calendar{
+  display:flex!important;
+  position:relative!important;
+  width:100%!important;
+  min-width:0!important;
+  height:100%!important;
+  min-height:0!important;
+  align-items:stretch!important;
+ }
+ #day.week-mode #weekGrid .week-time-axis{
+  flex:0 0 34px!important;
+  width:34px!important;
+  min-width:34px!important;
+ }
+ #day.week-mode #weekGrid .week-days-track{
+  display:flex!important;
+  flex:1 1 0!important;
+  width:calc(100% - 34px)!important;
+  min-width:0!important;
+ }
+ #day.week-mode #weekGrid .week-timeline-day:not(.week-undated){
+  display:flex!important;
+  flex:1 1 0!important;
+  width:auto!important;
+  min-width:0!important;
+  max-width:none!important;
+  padding-left:2px!important;
+  padding-right:2px!important;
+ }
+ #day.week-mode #weekGrid .week-timeline-head{
+  white-space:nowrap!important;
+  font-size:11px!important;
+ }
+ #day.week-mode #weekGrid .week-timeline-head b{
+  font-size:12px!important;
+  line-height:1.2!important;
+ }
+ #day.week-mode #weekGrid .week-timeline-head span{
+  font-size:9px!important;
+  line-height:1.2!important;
+ }
+ #day.week-mode #weekGrid .week-all-day-item{
+  max-width:100%!important;
+  min-width:0!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere!important;
+  font-size:8px!important;
+  padding:2px!important;
+ }
+ #day.week-mode #weekGrid .week-timeline-event{
+  min-width:0!important;
+  padding:2px!important;
+  font-size:8px!important;
+ }
+ #day.week-mode #weekGrid .week-timeline-event small{
+  display:none!important;
+ }
+ #day.week-mode #weekGrid .week-undated{
+  position:absolute!important;
+  left:100%!important;
+  top:0!important;
+  width:78px!important;
+  min-width:78px!important;
+  flex:none!important;
+ }
+}
 </style>
 </head>
 <body>
