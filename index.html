@@ -318,7 +318,23 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
   padding:12px 10px;
   gap:9px;
  }
- #day.week-mode .week-day-head{padding-bottom:9px}
+ #day.week-mode .week-day{
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  padding:8px 3px!important;
+ }
+ #day.week-mode .week-day.week-today{box-shadow:none!important}
+ #day.week-mode .week-day-head{
+  border-bottom:0!important;
+  padding:0 0 12px!important;
+  justify-content:flex-start;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:2px;
+ }
+ #day.week-mode .week-day-name{color:var(--green)}
  #day.week-mode .week-day-name{font-size:16px}
  #day.week-mode .week-day-date{font-size:13px}
  #day.week-mode .week-entry{font-size:13px;line-height:1.45;padding:9px 8px}
@@ -1380,7 +1396,7 @@ initAuth();
   grid-template-columns:none!important;
   grid-template-rows:minmax(0,1fr)!important;
   grid-auto-flow:column!important;
-  grid-auto-columns:calc((100% - 20px)/3)!important;
+  grid-auto-columns:calc((100% - 36px)/4)!important;
   gap:10px!important;
   width:100%;
   height:100%;
