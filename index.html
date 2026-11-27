@@ -498,6 +498,8 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
 }
 
 /* Stable hour rules: use real positioned elements rather than sub-pixel gradients */
+.week-hour-rule{position:absolute;left:0;right:0;height:0;border-top:1px solid var(--accent-line);pointer-events:none;z-index:0}
+
 @media(max-width:600px){
  #day.week-mode .week-axis-hours,#day.week-mode .week-timeline-lane{position:relative;background:none!important;background-image:none!important}
  #day.week-mode .week-hour-rule{position:absolute;left:0;right:0;height:0;border-top:1px solid var(--accent-line);pointer-events:none;z-index:0}
