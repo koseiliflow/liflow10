@@ -1282,7 +1282,7 @@ function renderTasks(){
       <div style="padding-top:5px">${completedHtml||'<div class="empty">該当する終了タスクはありません</div>'}</div>
     </details>`;
   const searchInput=$("#taskSearch");if(searchInput)searchInput.oninput=()=>{taskSearchTerm=searchInput.value.trim().toLowerCase();$$("#taskListContent [data-task-search]").forEach(row=>{row.hidden=!!taskSearchTerm&&!row.dataset.taskSearch.includes(taskSearchTerm)});};
-  $ $("[data-tasktag]").forEach(b=>b.onclick=()=>{selectedTaskTag=b.dataset.tasktag;renderTasks()});
+  $$("[data-tasktag]").forEach(b=>b.onclick=()=>{selectedTaskTag=b.dataset.tasktag;renderTasks()});
   $$("[data-taskcheck]").forEach(c=>c.onchange=()=>{tasks.find(t=>t.id==c.dataset.taskcheck).done=c.checked;renderAll()});
   $$("[data-edit-task]").forEach(b=>b.onclick=()=>openTaskEditor(b.dataset.editTask));
   $$("[data-delete]").forEach(b=>b.onclick=()=>{if(confirm("このタスクを削除しますか？")){tasks=tasks.filter(t=>String(t.id)!==String(b.dataset.delete));events=events.filter(ev=>String(ev.taskId)!==String(b.dataset.delete));renderAll()}});
