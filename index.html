@@ -1474,7 +1474,7 @@ function renderMonth(){let y=monthDate.getFullYear(),m=monthDate.getMonth();$('#
   if(weekLane&&$('#day').classList.contains('show')&&$('#day').classList.contains('week-mode')){
    const task=tasks.find(t=>String(t.id)===String(drag.task.id));
    if(task){
-    const rect=weekLane.getBoundingClientRect(),raw=5*60+(y-rect.top)*60/Math.max(1,weekLane.offsetHeight/19);
+    const rect=weekLane.getBoundingClientRect(),raw=5*60+(y-rect.top)*60/Math.max(1,rect.height/19);
     const durationMinutes=Math.max(5,Number(task.minutes)||60);
     const start=Math.max(5*60,Math.min(24*60-durationMinutes,Math.round(raw/5)*5));
     task.plannedDate=weekLane.dataset.weekLane;task.allDay=false;
