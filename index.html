@@ -1194,7 +1194,7 @@ function renderWeek(){
   });
   document.addEventListener("pointercancel",()=>{clearEventDrag()});
  }
- $$$("#weekGrid [data-week-lane]").forEach(lane=>{
+ $$("#weekGrid [data-week-lane]").forEach(lane=>{
   lane.onclick=e=>{if(e.target.closest(".week-timeline-event"))return;const at=weekTimeAtY(lane,e.clientY);openSheet(lane.dataset.weekLane,hm(at),hm(Math.min(at+60,dayEnd)))};
   lane.ondragover=e=>{e.preventDefault();lane.classList.add("is-drop-target")};
   lane.ondragleave=()=>lane.classList.remove("is-drop-target");
