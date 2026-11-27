@@ -880,7 +880,7 @@ function renderWeek(){
  const columns=days.map((date,i)=>{
   const dateKey=key(date),dayEvents=getEventsForDate(dateKey);
   const linkedIds=new Set(dayEvents.filter(e=>e.taskId!=null).map(e=>String(e.taskId)));
-  const allDay=[...dayEvents.filter(e=>e.allDay).map(ev=>({title:ev.title,tag:ev.tag||"その他",eventId:ev.sourceId,date:dateKey})),...getTaskAllDayEntries(dateKey).map(t=>({title:t.title,tag:t.tag||"その他",taskId:t.id,date:dateKey,done:!!t.done}))];
+  const allDay=[...dayEvents.filter(e=>e.allDay).map(ev=>({title:ev.title,tag:ev.tag||"その他",eventId:ev.sourceId,date:dateKey})),...getTaskAllDayEntries(dateKey).filter(t=>!linkedIds.has(String(t.id))).map(t=>({title:t.title,tag:t.tag||"その他",taskId:t.id,date:dateKey,done:!!t.done}))];
   const visible=dayEvents.filter(e=>!e.allDay).map(e=>({...e,_s:Math.max(dayStart,mins(e.start)),_e:Math.min(dayEnd,mins(e.end))})).filter(e=>e._e>e._s).sort((a,b)=>a._s-b._s||a._e-b._e);
   let groups=[];
   for(const ev of visible){let g=groups[groups.length-1];if(!g||ev._s>=g.end){g={items:[],end:ev._e};groups.push(g)}g.items.push(ev);g.end=Math.max(g.end,ev._e)}
