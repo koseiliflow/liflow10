@@ -482,6 +482,20 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
   flex:none!important;
  }
 }
+
+/* Zoomed weekly view: three day columns across the viewport */
+@media(max-width:600px){
+ #day.week-mode #weekGrid.is-zoomed{overflow-x:auto!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch}
+ #day.week-mode #weekGrid.is-zoomed .week-calendar{width:max-content!important;min-width:max-content!important}
+ #day.week-mode #weekGrid.is-zoomed .week-days-track{flex:0 0 calc((100vw - 42px)*7/3)!important;width:calc((100vw - 42px)*7/3)!important;min-width:calc((100vw - 42px)*7/3)!important}
+ #day.week-mode #weekGrid.is-zoomed .week-timeline-day:not(.week-undated){flex:0 0 calc((100vw - 42px)/3)!important;width:calc((100vw - 42px)/3)!important;min-width:calc((100vw - 42px)/3)!important}
+ #day.week-mode #weekGrid.is-zoomed .week-undated{left:100%!important}
+ #day.week-mode #weekGrid.is-zoomed .week-timeline-event small{display:block!important}
+ #day.week-mode .week-undated-task{touch-action:none!important;user-select:none;-webkit-user-select:none;cursor:grab}
+ #day.week-mode .week-undated-task.is-dragging{opacity:.45}
+ #day.week-mode .week-timeline-lane.is-drop-target{outline:2px solid var(--green);outline-offset:-2px}
+ .week-task-drag-ghost{position:fixed;z-index:99999;pointer-events:none;opacity:.92;padding:8px 12px;border-radius:9px;box-shadow:0 5px 18px #0002;font-size:12px;max-width:180px;transform:translate(-50%,-120%)}
+}
 </style>
 </head>
 <body>
@@ -1000,7 +1014,7 @@ function renderWeek(){
   </section>`;
  }).join("");
  const undated=tasks.filter(t=>!t.done&&!t.plannedDate&&!events.some(ev=>String(ev.taskId)===String(t.id)));
- const undatedHtml=undated.map(t=>`<button type="button" class="week-all-day-item" style="${tagInline(t.tag||"その他")}" data-week-alltask="${esc(t.id)}">${esc(t.title)}</button>`).join("")||'<span class="week-all-day-empty">未配置なし</span>';
+ const undatedHtml=undated.map(t=>`<button type="button" class="week-all-day-item week-undated-task" draggable="true" style="${tagInline(t.tag||"その他")}" data-week-alltask="${esc(t.id)}" data-week-drag-task="${esc(t.id)}">${esc(t.title)}</button>`).join("")||'<span class="week-all-day-empty">未配置なし</span>';
  $("#weekGrid").innerHTML=`<div class="week-calendar"><div class="week-time-axis"><div class="week-axis-head">JST</div><div class="week-axis-all-day"></div><div class="week-axis-hours" style="height:${laneHeight}px;background:${hourLines}">${axis}</div></div><div class="week-days-track">${columns}<section class="week-timeline-day week-undated"><header class="week-timeline-head"><b>未定</b><span>${undated.length}件</span></header><div class="week-all-day">${undatedHtml}</div><div class="week-timeline-lane week-undated-lane" style="height:${laneHeight}px;background:${hourLines}"></div></section></div></div>`;
  grid.classList.toggle("is-zoomed",weekZoomLevel>1.02);
  if(!grid.dataset.pinchBound){
@@ -1010,7 +1024,40 @@ function renderWeek(){
   grid.addEventListener("touchend",e=>{if(e.touches.length<2&&weekPinchStart){weekPinchStart=0;grid.classList.remove("is-pinching");renderWeek()}},{passive:true});
  }
  $("#weekGrid [data-week-event]").forEach(el=>el.onclick=()=>showEventDetail(el.dataset.weekEvent,el.dataset.weekDate));
- $$("#weekGrid [data-week-alltask]").forEach(el=>el.onclick=()=>{const t=tasks.find(x=>String(x.id)===String(el.dataset.weekAlltask));if(t){t.done=!t.done;renderAll()}});
+ $("#weekGrid [data-week-alltask]").forEach(el=>el.onclick=e=>{if(el.dataset.dragMoved==="1"){el.dataset.dragMoved="0";e.preventDefault();return}const t=tasks.find(x=>String(x.id)===String(el.dataset.weekAlltask));if(t){t.done=!t.done;renderAll()}});
+ $("#weekGrid [data-week-drag-task]").forEach(el=>el.ondragstart=e=>{e.dataTransfer.setData("text/plain","task:"+el.dataset.weekDragTask);e.dataTransfer.effectAllowed="move"});
+ if(!grid.dataset.touchTaskDragBound){
+  grid.dataset.touchTaskDragBound="1";
+  let pending=null,ghost=null,moved=false;
+  grid.addEventListener("pointerdown",e=>{
+   const item=e.target.closest("[data-week-drag-task]");
+   if(!item||e.pointerType==="mouse")return;
+   pending={item,id:item.dataset.weekDragTask,x:e.clientX,y:e.clientY,pointerId:e.pointerId};
+   moved=false;
+  },{passive:true});
+  grid.addEventListener("pointermove",e=>{
+   if(!pending||pending.pointerId!==e.pointerId)return;
+   if(!moved&&Math.hypot(e.clientX-pending.x,e.clientY-pending.y)<8)return;
+   if(!moved){moved=true;pending.item.classList.add("is-dragging");ghost=document.createElement("div");ghost.className="week-task-drag-ghost";ghost.textContent=pending.item.textContent;ghost.style.background=getComputedStyle(pending.item).backgroundColor;ghost.style.color=getComputedStyle(pending.item).color;document.body.appendChild(ghost)}
+   e.preventDefault();
+   if(ghost){ghost.style.left=e.clientX+"px";ghost.style.top=e.clientY+"px"}
+   grid.querySelectorAll(".week-timeline-lane").forEach(l=>l.classList.toggle("is-drop-target",(()=>{const r=l.getBoundingClientRect();return e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom})()));
+  },{passive:false});
+  const finishTaskDrag=e=>{
+   if(!pending)return;
+   const current=pending;
+   if(moved){
+    const target=document.elementFromPoint(e.clientX,e.clientY)?.closest("[data-week-lane]");
+    if(target){const t=tasks.find(x=>String(x.id)===String(current.id));if(t){const rect=target.getBoundingClientRect(),raw=dayStart+(e.clientY-rect.top),at=Math.max(dayStart,Math.min(dayEnd-5,Math.round(raw/5)*5));if(at+t.minutes<=dayEnd){t.plannedDate=target.dataset.weekLane;events=events.filter(ev=>String(ev.taskId)!==String(t.id));events.push({id:eventSeq++,taskId:t.id,title:t.title,start:hm(at),end:hm(at+t.minutes),type:"task",tag:t.tag||"勉強",date:target.dataset.weekLane,repeat:"none",skipDates:[]});renderAll()}}}
+    current.item.dataset.dragMoved="1";
+   }
+   current.item.classList.remove("is-dragging");
+   grid.querySelectorAll(".week-timeline-lane").forEach(l=>l.classList.remove("is-drop-target"));
+   if(ghost)ghost.remove();ghost=null;pending=null;moved=false;
+  };
+  grid.addEventListener("pointerup",finishTaskDrag);
+  grid.addEventListener("pointercancel",finishTaskDrag);
+ }
  $$("#weekGrid [data-week-lane]").forEach(lane=>{
   lane.onclick=e=>{if(e.target.closest(".week-timeline-event"))return;const rect=lane.getBoundingClientRect(),raw=dayStart+(e.clientY-rect.top),at=Math.max(dayStart,Math.min(dayEnd-5,Math.round(raw/5)*5));openSheet(lane.dataset.weekLane,hm(at),hm(Math.min(at+60,dayEnd)))};
   lane.ondragover=e=>{e.preventDefault();lane.classList.add("is-drop-target")};
