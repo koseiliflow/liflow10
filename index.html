@@ -585,10 +585,11 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
 <header class="top"><div><div class="eyebrow liflow-top-logo">Liflow<span>.</span></div><h1 id="pageTitle">今日も、いい一日に。</h1></div><div class="account-tools"><span class="account-email" id="accountEmail"></span><span class="sync-state" id="syncState"></span><button class="btn light small" id="enablePushBtn" type="button">通知を有効にする</button><button class="btn ghost small" id="logoutBtn" type="button">ログアウト</button><button class="settings-trigger" id="openSettings" type="button" aria-label="設定を開く" title="設定"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.25a3.75 3.75 0 1 0 0 7.5 3.75 3.75 0 0 0 0-7.5Z"/><path d="m19.4 15 .05.05a1.8 1.8 0 0 1-2.55 2.55l-.05-.05a1.8 1.8 0 0 0-3.07 1.27v.15a1.8 1.8 0 0 1-3.6 0v-.08a1.8 1.8 0 0 0-3.07-1.27l-.05.05a1.8 1.8 0 1 1-2.55-2.55l.05-.05a1.8 1.8 0 0 0-1.27-3.07h-.15a1.8 1.8 0 0 1 0-3.6h.08a1.8 1.8 0 0 0 1.27-3.07l-.05-.05a1.8 1.8 0 1 1 2.55-2.55l.05.05a1.8 1.8 0 0 0 3.07-1.27v-.15a1.8 1.8 0 0 1 3.6 0v.08a1.8 1.8 0 0 0 3.07 1.27l.05-.05a1.8 1.8 0 1 1 2.55 2.55l-.05.05a1.8 1.8 0 0 0 1.27 3.07h.15a1.8 1.8 0 0 1 0 3.6h-.08A1.8 1.8 0 0 0 19.4 15Z"/></svg></button><div class="datepill" id="todayLabel"></div></div></header>
 <section id="home" class="view show">
 <div class="stats">
-<div class="stat"><small>今日のタスク完了</small><strong id="homeDone">0/0</strong><em id="homePct">0% 完了</em></div>
+<div class="stat"><small>今日のタスク完了</small><strong id="homeDone">0/0</strong><em id="homePct">0% 完了</em><div class="home-progress-track" aria-hidden="true"><span id="homeProgressBar"></span></div></div>
 <div class="stat"><small>今日の予定</small><strong id="homeEvents">0</strong><em>スケジュール</em></div>
 <div class="stat"><small>今日の作業時間</small><strong id="homeStudy">0分</strong><em>記録済み</em></div>
 </div>
+<div class="home-quick-actions" aria-label="クイックアクション"><button type="button" class="home-quick-action" id="homeAddTask"><span class="quick-action-icon">＋</span><span><b>タスクを追加</b><small>やることを登録</small></span></button><button type="button" class="home-quick-action" id="homeAddEvent"><span class="quick-action-icon">＋</span><span><b>予定を追加</b><small>時間を確保する</small></span></button></div>
 <div class="grid">
 <div class="card"><div class="sectionhead"><h2>今日のタスク</h2><button class="btn light small" data-go="tasks">すべて見る →</button></div><div id="homeTasks"></div></div>
 <div class="card"><div class="sectionhead"><h2>今日のスケジュール</h2><button class="btn light small" data-go="day">開く →</button></div><div class="schedule-list" id="homeSchedule"></div></div>
@@ -597,7 +598,7 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
 <section id="tasks" class="view">
 <div class="card">
 <div class="sectionhead"><h2>タスク一覧</h2><div style="display:flex;align-items:center;gap:10px"><span class="muted" id="taskCount"></span><button class="btn" id="openTaskSheet" type="button" aria-label="タスクを追加">＋ タスクを追加</button></div></div>
-<div id="taskList"></div>
+<div id="taskList"><label class="task-search-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"></circle><path d="m16 16 5 5"></path></svg><input id="taskSearch" type="search" placeholder="タスクを検索" aria-label="タスクを検索"></label><div id="taskListContent"></div></div>
 </div>
 </section>
 <section id="day" class="view">
@@ -937,7 +938,7 @@ const TAG_STYLES={
   "プライベート":{bg:"#f3edf7",text:"#80618d",border:"#a98bb4"},
   "その他":{bg:"#eff1ef",text:"#68756d",border:"#9aa59e"}
 };
-let selectedTaskTag = "すべて";
+let selectedTaskTag = "すべて";let taskSearchTerm="";
 let taskTags=["勉強","学校","部活","プライベート","その他"];
 let scheduleTags=["学校","勉強","部活","プライベート","その他"];
  function taskTagIsVisible(task){return !taskPoolTagFilters.length||taskPoolTagFilters.includes(task.tag||"その他")}
@@ -1239,11 +1240,12 @@ const dueToday=tasks.filter(t=>t.dueDate&&t.dueDate<=todayKey&&!t.done&&!planned
 const homeTodayTasks=[...plannedToday,...dueToday];
 const done=homeTodayTasks.filter(t=>t.done).length;
 $("#homeDone").textContent=`${done}/${homeTodayTasks.length}`;
-$("#homePct").textContent=`${homeTodayTasks.length?Math.round(done/homeTodayTasks.length*100):0}% 完了`;
+$("#homePct").textContent=`${homeTodayTasks.length?Math.round(done/homeTodayTasks.length*100):0}% 完了`;$("#homeProgressBar").style.width=`${homeTodayTasks.length?done/homeTodayTasks.length*100:0}%`;
 const taskRows=items=>items.map(t=>`<div class="taskrow"><input type="checkbox" data-check="${t.id}" ${t.done?"checked":""}><div class="taskname ${t.done?"done":""}">${esc(t.title)}<div class="task-meta">${t.plannedDate?`実施予定 ${shortDate(t.plannedDate)}${t.allDay?"（終日）":""}`:""}${t.dueDate?`締切 ${shortDate(t.dueDate)}`:""}</div></div><span class="tag-dot" style="${tagInline(t.tag)}">${esc(t.tag||"その他")}</span>${t.done?'<span class="tag">完了</span>':''}<button type="button" class="btn light small home-focus-btn icon-only" data-focus-task="${t.id}" aria-label="${esc(t.title)}を計測" title="このタスクを計測"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2.5 1.5M9 2h6M12 2v3M19 6l1.5-1.5"></path></svg></button></div>`).join("");
 $("#homeTasks").innerHTML=`<div class="home-task-section"><h3>実施予定のタスク · ${plannedToday.length}件</h3>${taskRows(plannedToday)||'<div class="empty">今日が実施予定日のタスクはありません</div>'}</div><div class="home-task-section"><h3>〆切のタスク · ${dueToday.length}件</h3>${taskRows(dueToday)||'<div class="empty">今日が〆切の未完了タスクはありません</div>'}</div>`;
-$("#homeSchedule").innerHTML=getEventsForDate(key(today)).sort((a,b)=>a.start.localeCompare(b.start)).map(e=>`<div class="event"><div class="eventtime">${e.start}</div><div class="eventbody" style="${tagInline(e.tag)}"><b>${esc(e.title)}${e.isRecurring?'<span class="repeat-chip">繰り返し</span>':''}</b><small>${e.start} – ${e.end} · ${esc(e.tag||"その他")}</small></div></div>`).join("")||'<div class="empty">予定はありません</div>';
-$$("[data-check]").forEach(c=>c.onchange=()=>{let t=tasks.find(x=>x.id==c.dataset.check);if(t)t.done=c.checked;renderAll()});$$("[data-focus-task]").forEach(b=>b.onclick=()=>{const t=tasks.find(x=>String(x.id)===String(b.dataset.focusTask));if(!t)return;if(timer.running||timer.elapsed>0){switchView("focus");return;}timer.taskId=String(t.id);$("#timerSelect").value=String(t.id);$("#timerTask").textContent=t.title;switchView("focus");syncTimerControls();saveData()})}
+$("#homeSchedule").innerHTML=getEventsForDate(key(today)).sort((a,b)=>(a.start||"").localeCompare(b.start||"")).map(e=>`<div class="event home-event-open" role="button" tabindex="0" data-home-event="${e.sourceId||e.id}" data-home-date="${key(today)}"><div class="eventtime">${e.allDay?"終日":e.start}</div><div class="eventbody" style="${tagInline(e.tag)}"><b>${esc(e.title)}${e.isRecurring?'<span class="repeat-chip">繰り返し</span>':''}</b><small>${e.allDay?"終日":`${e.start} – ${e.end}`} · ${esc(e.tag||"その他")}</small></div></div>`).join("")||'<div class="empty">予定はありません</div>';
+$("#homeSchedule [data-home-event]").forEach(el=>{const open=()=>showEventDetail(el.dataset.homeEvent,el.dataset.homeDate);el.onclick=open;el.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();open()}}});$("#homeAddTask").onclick=()=>openTaskEditor();$("#homeAddEvent").onclick=()=>openSheet(key(today));
+$("[data-check]").forEach(c=>c.onchange=()=>{let t=tasks.find(x=>x.id==c.dataset.check);if(t)t.done=c.checked;renderAll()});$$("[data-focus-task]").forEach(b=>b.onclick=()=>{const t=tasks.find(x=>String(x.id)===String(b.dataset.focusTask));if(!t)return;if(timer.running||timer.elapsed>0){switchView("focus");return;}timer.taskId=String(t.id);$("#timerSelect").value=String(t.id);$("#timerTask").textContent=t.title;switchView("focus");syncTimerControls();saveData()})}
 function actualSecondsForTask(task){return sessions.reduce((sum,s)=>sum+((s.taskId!=null&&String(s.taskId)===String(task.id))||(s.taskId==null&&s.title===task.title)?Number(s.seconds)||0:0),0)}
 function formatElapsed(total){let sec=Math.max(0,Math.floor(Number(total)||0)),h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=sec%60;return h>0?`${h}時間${String(m).padStart(2,"0")}分${String(s).padStart(2,"0")}秒`:`${m}分${String(s).padStart(2,"0")}秒`}
 function renderTasks(){
@@ -1253,18 +1255,18 @@ function renderTasks(){
   const visibleTasks=selectedTaskTag==="すべて"?tasks:tasks.filter(t=>(t.tag||"その他")===selectedTaskTag);
   const activeTasks=visibleTasks.filter(t=>!t.done);
   const completedTasks=visibleTasks.filter(t=>t.done);
-  $("#taskCount").textContent=`${activeTasks.length}件 未完了 · ${completedTasks.length}件 完了`;
+  $("#taskCount").textContent=`${activeTasks.length}件 未完了 · ${completedTasks.length}件 完了`;if($("#taskSearch"))$("#taskSearch").value=taskSearchTerm;
   const tagCounts=Object.fromEntries(tags.map(tag=>[tag,tag==="すべて"?tasks.length:tasks.filter(t=>(t.tag||"その他")===tag).length]));
   const renderTaskRows=(items)=>items.map(t=>{
     let actual=actualSecondsForTask(t),planned=t.minutes*60,pct=planned?Math.min(100,actual/planned*100):0;
     let delta=actual===0?'<span class="comparison-delta none">まだ計測なし</span>':actual>planned?`<span class="comparison-delta over">予定より ${formatElapsed(actual-planned)} 長い</span>`:actual<planned?`<span class="comparison-delta under">予定より ${formatElapsed(planned-actual)} 短い</span>`:'<span class="comparison-delta under">予定どおり</span>';
     let overdue=t.dueDate&&t.dueDate<key(today)&&!t.done;
     let meta=`<span class="tag-dot" style="${tagInline(t.tag)}">${esc(t.tag||"その他")}</span>${t.plannedDate?`<span>実施予定：${shortDate(t.plannedDate)}${t.allDay?"（終日）":""}</span>`:""}${t.dueDate?`<span class="${overdue?"late":""}">締め切り：${shortDate(t.dueDate)}${overdue?"（期限超過）":""}</span>`:""}`;
-    return `<div class="taskrow"><input type="checkbox" data-taskcheck="${t.id}" ${t.done?"checked":""}><div class="taskname ${t.done?"done":""}">${esc(t.title)}<div class="muted" style="font-size:11px">${t.priority}優先</div><div class="task-meta">${meta}</div><div class="task-comparison"><div class="comparison-values"><span>予定 <b>${t.minutes}分</b></span><span>実績 <b>${actual?formatElapsed(actual):"0分00秒"}</b></span>${delta}</div><div class="progress compare-progress"><span style="width:${pct}%"></span></div></div></div>${t.done?'<span class="tag">完了</span>':`<button type="button" class="btn light small home-focus-btn icon-only" data-focus="${t.id}" aria-label="${esc(t.title)}を計測" title="このタスクを計測"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2.5 1.5M9 2h6M12 2v3M19 6l1.5-1.5"></path></svg></button>`}<button class="btn light small" data-edit-task="${t.id}">編集</button><button class="btn ghost small" data-delete="${t.id}">削除</button></div>`
+    return `<div class="taskrow" data-task-search="${esc([t.title,t.tag||"その他",t.priority,t.plannedDate||"",t.dueDate||""].join(" ").toLowerCase())}"><input type="checkbox" data-taskcheck="${t.id}" ${t.done?"checked":""}><div class="taskname ${t.done?"done":""}">${esc(t.title)}<div class="muted" style="font-size:11px">${t.priority}優先</div><div class="task-meta">${meta}</div><div class="task-comparison"><div class="comparison-values"><span>予定 <b>${t.minutes}分</b></span><span>実績 <b>${actual?formatElapsed(actual):"0分00秒"}</b></span>${delta}</div><div class="progress compare-progress"><span style="width:${pct}%"></span></div></div></div>${t.done?'<span class="tag">完了</span>':`<button type="button" class="btn light small home-focus-btn icon-only" data-focus="${t.id}" aria-label="${esc(t.title)}を計測" title="このタスクを計測"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2.5 1.5M9 2h6M12 2v3M19 6l1.5-1.5"></path></svg></button>`}<button class="btn light small" data-edit-task="${t.id}">編集</button><button class="btn ghost small" data-delete="${t.id}">削除</button></div>`
   }).join("");
   const activeHtml=renderTaskRows(activeTasks);
   const completedHtml=renderTaskRows(completedTasks);
-  $("#taskList").innerHTML=`
+  $("#taskListContent").innerHTML=`
     <div class="tag-filter-bar" aria-label="タグでタスクを絞り込む">
       ${tags.map(tag=>`<button type="button" class="tag-filter-chip ${selectedTaskTag===tag?"active":""}" data-tasktag="${esc(tag)}" aria-pressed="${selectedTaskTag===tag}">${esc(tag)}<span class="count">${tagCounts[tag]}</span></button>`).join("")}
     </div>
@@ -1279,7 +1281,8 @@ function renderTasks(){
       </summary>
       <div style="padding-top:5px">${completedHtml||'<div class="empty">該当する終了タスクはありません</div>'}</div>
     </details>`;
-  $$("[data-tasktag]").forEach(b=>b.onclick=()=>{selectedTaskTag=b.dataset.tasktag;renderTasks()});
+  const searchInput=$("#taskSearch");if(searchInput)searchInput.oninput=()=>{taskSearchTerm=searchInput.value.trim().toLowerCase();$("#taskListContent [data-task-search]").forEach(row=>{row.hidden=!!taskSearchTerm&&!row.dataset.taskSearch.includes(taskSearchTerm)});};
+  $("[data-tasktag]").forEach(b=>b.onclick=()=>{selectedTaskTag=b.dataset.tasktag;renderTasks()});
   $$("[data-taskcheck]").forEach(c=>c.onchange=()=>{tasks.find(t=>t.id==c.dataset.taskcheck).done=c.checked;renderAll()});
   $$("[data-edit-task]").forEach(b=>b.onclick=()=>openTaskEditor(b.dataset.editTask));
   $$("[data-delete]").forEach(b=>b.onclick=()=>{if(confirm("このタスクを削除しますか？")){tasks=tasks.filter(t=>String(t.id)!==String(b.dataset.delete));events=events.filter(ev=>String(ev.taskId)!==String(b.dataset.delete));renderAll()}});
@@ -1990,4 +1993,33 @@ main{max-width:1480px;padding:34px clamp(22px,4vw,64px);padding-bottom:48px}
 @media(prefers-reduced-motion:reduce){
  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+</style>
+
+<style id="liflow-hig-information-architecture">
+.home-quick-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0 0 18px}
+.home-quick-action{display:flex;align-items:center;gap:12px;min-height:68px;padding:12px 15px;text-align:left;border:1px solid var(--hig-separator);border-radius:16px;background:var(--panel);color:var(--ink);box-shadow:var(--hig-shadow);cursor:pointer;transition:background .16s,transform .16s}
+.home-quick-action:active{transform:scale(.985);background:var(--hig-fill)}
+.home-quick-action b,.home-quick-action small{display:block}
+.home-quick-action b{font-size:13px;font-weight:650}
+.home-quick-action small{margin-top:2px;font-size:11px;color:var(--hig-secondary)}
+.quick-action-icon{display:grid;place-items:center;width:34px;height:34px;flex:0 0 34px;border-radius:50%;background:var(--green2);color:var(--green);font-size:22px;font-weight:400}
+.home-progress-track{height:5px;margin-top:10px;overflow:hidden;border-radius:99px;background:var(--hig-fill-2)}
+.home-progress-track span{display:block;width:0;height:100%;border-radius:inherit;background:var(--green);transition:width .25s ease}
+.task-search-wrap{position:relative;display:block;margin:0 0 14px}
+.task-search-wrap svg{position:absolute;left:14px;top:50%;width:17px;height:17px;transform:translateY(-50%);fill:none;stroke:var(--hig-tertiary);stroke-width:1.8;stroke-linecap:round}
+.task-search-wrap input{display:block;width:100%;min-height:46px;padding:10px 14px 10px 42px;border:1px solid var(--hig-separator);border-radius:13px;background:var(--hig-fill);color:var(--ink);font-size:16px;outline-offset:2px}
+.task-search-wrap input::placeholder{color:var(--hig-tertiary)}
+#taskListContent [data-task-search][hidden]{display:none!important}
+#taskListContent .taskrow{align-items:center;gap:10px}
+#taskListContent .taskrow>input[type=checkbox]{width:21px;height:21px;flex:0 0 21px;accent-color:var(--green)}
+#taskListContent .taskrow .taskname{min-width:0;overflow-wrap:anywhere}
+.home-event-open{cursor:pointer;border-radius:12px;padding:5px;transition:background .15s}
+.home-event-open:hover,.home-event-open:focus-visible{background:var(--hig-fill)}
+.home-event-open:active{background:var(--green2)}
+.schedule-mode-switch{display:inline-flex;gap:3px;padding:4px;border-radius:13px;background:var(--hig-fill-2)}
+.schedule-mode-switch .btn{min-height:36px;border:0;border-radius:10px;background:transparent;color:var(--hig-secondary);box-shadow:none}
+.schedule-mode-switch .btn.active{background:var(--panel);color:var(--green);box-shadow:0 1px 3px #18251c18}
+#monthGrid .daycell{transition:background .15s,border-color .15s}
+#monthGrid .daycell:active{background:var(--green2)}
+@media(max-width:600px){.home-quick-actions{gap:8px;margin-bottom:13px}.home-quick-action{min-height:64px;padding:10px;border-radius:14px;gap:9px}.home-quick-action b{font-size:12px}.home-quick-action small{font-size:10px}.quick-action-icon{width:30px;height:30px;flex-basis:30px;font-size:20px}.task-search-wrap{margin-bottom:12px}#taskListContent .taskrow{padding:13px 0;align-items:flex-start}#taskListContent .taskrow .taskname{flex:1}}
 </style>
