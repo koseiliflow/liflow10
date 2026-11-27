@@ -541,6 +541,8 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
 #day.week-mode .week-undated-task{touch-action:none!important;user-select:none;-webkit-user-select:none}
 #day.week-mode .week-task-entry[data-task-done="true"] .week-task-open{text-decoration:line-through;opacity:.65}
 
+
+#day.week-mode .week-timeline-event[data-week-drag-event],#day.week-mode .week-task-entry[data-week-drag-task]{touch-action:none;user-select:none;-webkit-user-select:none}
 </style>
 </head>
 <body>
@@ -1134,7 +1136,64 @@ function renderWeek(){
   document.addEventListener("pointerup",onPointerUp);
   document.addEventListener("pointercancel",onPointerUp);
  }
- $$("#weekGrid [data-week-lane]").forEach(lane=>{
+ if(!grid.dataset.touchEventDragBound){
+  grid.dataset.touchEventDragBound="1";
+  let eventPending=null,eventGhost=null,eventMoved=false;
+  const clearEventDrag=()=>{
+   if(eventGhost)eventGhost.remove();
+   eventGhost=null;
+   grid.querySelectorAll("[data-week-lane]").forEach(l=>l.classList.remove("is-drop-target"));
+   eventPending=null;eventMoved=false;
+  };
+  grid.addEventListener("pointerdown",e=>{
+   const card=e.target.closest("[data-week-drag-event]");
+   if(!card||e.target.closest("[data-week-task-check]")||e.pointerType==="mouse"||e.button!==0)return;
+   const ev=eventById(card.dataset.weekDragEvent);if(!ev||ev.allDay)return;
+   eventPending={card,id:ev.id,oldDate:card.dataset.weekDate,x:e.clientX,y:e.clientY,pointerId:e.pointerId,duration:duration(ev.start,ev.end)};
+   eventMoved=false;
+  },{passive:true});
+  document.addEventListener("pointermove",e=>{
+   if(!eventPending||eventPending.pointerId!==e.pointerId)return;
+   if(!eventMoved&&Math.hypot(e.clientX-eventPending.x,e.clientY-eventPending.y)<8)return;
+   if(!eventMoved){
+    eventMoved=true;
+    eventGhost=document.createElement("div");eventGhost.className="week-task-drag-ghost";
+    eventGhost.textContent=eventPending.card.querySelector("b")?.textContent||"予定";
+    eventGhost.style.background=getComputedStyle(eventPending.card).backgroundColor;
+    eventGhost.style.color=getComputedStyle(eventPending.card).color;
+    document.body.appendChild(eventGhost);
+   }
+   e.preventDefault();
+   if(eventGhost){eventGhost.style.left=e.clientX+"px";eventGhost.style.top=e.clientY+"px"}
+   const hit=document.elementFromPoint(e.clientX,e.clientY)?.closest("#weekGrid [data-week-lane]");
+   grid.querySelectorAll("[data-week-lane]").forEach(l=>l.classList.toggle("is-drop-target",l===hit));
+  },{passive:false});
+  document.addEventListener("pointerup",e=>{
+   if(!eventPending||eventPending.pointerId!==e.pointerId)return;
+   const current=eventPending,wasMoved=eventMoved;
+   if(wasMoved){
+    const target=[...grid.querySelectorAll("[data-week-lane]")].find(l=>{
+     const r=l.getBoundingClientRect();return e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom;
+    });
+    const ev=eventById(current.id);
+    if(target&&ev&&current.duration>0){
+     const at=weekTimeAtY(target,e.clientY),startAt=Math.min(at,dayEnd-current.duration);
+     if(startAt>=dayStart&&startAt+current.duration<=dayEnd){
+      if(ev.repeat&&ev.repeat!=="none"){
+       ev.skipDates=ev.skipDates||[];if(!ev.skipDates.includes(current.oldDate))ev.skipDates.push(current.oldDate);
+       events.push({...ev,id:eventSeq++,date:target.dataset.weekLane,start:hm(startAt),end:hm(startAt+current.duration),repeat:"none",repeatUntil:"",skipDates:[]});
+      }else{ev.date=target.dataset.weekLane;ev.start=hm(startAt);ev.end=hm(startAt+current.duration)}
+      if(ev.taskId!=null){const linked=tasks.find(t=>String(t.id)===String(ev.taskId));if(linked)linked.plannedDate=target.dataset.weekLane}
+      saveData();
+     }
+    }
+   }
+   clearEventDrag();
+   if(wasMoved)renderAll();
+  });
+  document.addEventListener("pointercancel",()=>{clearEventDrag()});
+ }
+ $("#weekGrid [data-week-lane]").forEach(lane=>{
   lane.onclick=e=>{if(e.target.closest(".week-timeline-event"))return;const at=weekTimeAtY(lane,e.clientY);openSheet(lane.dataset.weekLane,hm(at),hm(Math.min(at+60,dayEnd)))};
   lane.ondragover=e=>{e.preventDefault();lane.classList.add("is-drop-target")};
   lane.ondragleave=()=>lane.classList.remove("is-drop-target");
