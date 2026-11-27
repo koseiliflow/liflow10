@@ -485,10 +485,10 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
 
 /* Zoomed weekly view: three day columns across the viewport */
 @media(max-width:600px){
- #day.week-mode #weekGrid.is-zoomed{overflow-x:auto!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch}
+ #day.week-mode #weekGrid.week-grid.is-zoomed{overflow-x:auto!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch}
  #day.week-mode #weekGrid.is-zoomed .week-calendar{width:max-content!important;min-width:max-content!important}
- #day.week-mode #weekGrid.is-zoomed .week-days-track{flex:0 0 calc((100vw - 42px)*7/3)!important;width:calc((100vw - 42px)*7/3)!important;min-width:calc((100vw - 42px)*7/3)!important}
- #day.week-mode #weekGrid.is-zoomed .week-timeline-day:not(.week-undated){flex:0 0 calc((100vw - 42px)/3)!important;width:calc((100vw - 42px)/3)!important;min-width:calc((100vw - 42px)/3)!important}
+ #day.week-mode #weekGrid.is-zoomed .week-days-track{flex:0 0 calc((100vw - 42px)*7/3)!important;width:calc(233.333vw - 98px)!important;min-width:calc(233.333vw - 98px)!important}
+ #day.week-mode #weekGrid.is-zoomed .week-timeline-day:not(.week-undated){flex:0 0 calc(33.333vw - 14px)!important;width:calc(33.333vw - 14px)!important;min-width:calc(33.333vw - 14px)!important}
  #day.week-mode #weekGrid.is-zoomed .week-undated{left:100%!important}
  #day.week-mode #weekGrid.is-zoomed .week-timeline-event small{display:block!important}
  #day.week-mode .week-undated-task{touch-action:none!important;user-select:none;-webkit-user-select:none;cursor:grab}
