@@ -537,7 +537,7 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
 #day.week-mode .week-task-done-mark{flex:0 0 13px;color:var(--green);font-weight:800}
 #day.week-mode .week-timeline-event{cursor:grab;touch-action:pan-y}
 #day.week-mode .week-timeline-event:active{cursor:grabbing}
-#day.week-mode .week-timed-task-check{position:absolute;top:3px;right:3px;z-index:2;width:14px;height:14px;margin:0;accent-color:var(--green)}
+#day.week-mode .week-timed-task-check{position:absolute;top:3px;left:auto;right:3px;z-index:2;width:14px;height:14px;margin:0;accent-color:var(--green)}
 #day.week-mode .week-undated-task{touch-action:none!important;user-select:none;-webkit-user-select:none}
 #day.week-mode .week-task-entry[data-task-done="true"] .week-task-open{text-decoration:line-through;opacity:.65}
 
@@ -1050,8 +1050,8 @@ function renderWeek(){
    return `<div class="week-timeline-event" data-week-event="${ev.sourceId}" data-week-date="${dateKey}" ${ev.taskId!=null?`data-week-task-event="${esc(ev.taskId)}"`:""} data-week-drag-event="${ev.sourceId}" draggable="true" style="top:${top}px;height:${height}px;left:calc(${left}% + 2px);width:calc(${w}% - 4px);background:${c.bg};border-left:2px solid ${c.border};color:${c.text}">${ev.taskId!=null?`<input type="checkbox" class="week-task-check week-timed-task-check" data-week-task-check="${esc(ev.taskId)}" aria-label="タスクを完了">`:""}<b>${esc(ev.title)}</b><small>${ev.start}–${ev.end}</small></div>`;
   }).join("");
   const allDayHtml=allDay.map(item=>item.eventId
-   ?`<button type="button" class="week-all-day-item" style="${tagInline(item.tag)}" data-week-event="${item.eventId}" data-week-date="${dateKey}" draggable="true">${esc(item.title)}</button>`
-   :`<div class="week-all-day-item week-task-entry" style="${tagInline(item.tag)}" data-week-alltask="${esc(item.taskId)}" ${item.done?"data-task-done=\"true\"":""}>${!item.done?`<input type="checkbox" class="week-task-check" data-week-task-check="${esc(item.taskId)}" aria-label="タスクを完了">`:'<span class="week-task-done-mark">✓</span>'}<button type="button" class="week-task-open" data-week-task-open="${esc(item.taskId)}">${esc(item.title)}<small>${esc(item._calendarLabel||"")}</small></button></div>`
+   ?`<button type="button" class="week-all-day-item" style="${tagInline(item.tag)}" data-week-event="${item.eventId}" data-week-date="${dateKey}">${esc(item.title)}</button>`
+   :`<div class="week-all-day-item week-task-entry" style="${tagInline(item.tag)}" data-week-alltask="${esc(item.taskId)}" ${!item.done?`data-week-drag-task="${esc(item.taskId)}" draggable="true"`:""} ${item.done?"data-task-done=\"true\"":""}>${!item.done?`<input type="checkbox" class="week-task-check" data-week-task-check="${esc(item.taskId)}" aria-label="タスクを完了">`:'<span class="week-task-done-mark">✓</span>'}<button type="button" class="week-task-open" data-week-task-open="${esc(item.taskId)}">${esc(item.title)}<small>${esc(item._calendarLabel||"")}</small></button></div>`
   ).join("")||'<span class="week-all-day-empty">—</span>';
   const allItems=allDayHtml;
   return `<section class="week-timeline-day ${dateKey===key(today)?"is-today":""}" data-week-date="${dateKey}">
