@@ -344,6 +344,52 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
  #day.week-mode .week-entry:has(.week-task-check){padding-left:29px}
 }
 
+
+/* Liflow weekly timeline: clean time-grid with four mobile days in view */
+@media(max-width:600px){
+ #day.week-mode .week-view{gap:7px!important;padding:8px 0 8px 8px!important}
+ #day.week-mode .week-toolbar{padding-right:8px!important}
+ #day.week-mode #weekGrid{flex:1 1 auto;min-height:0;overflow:auto!important;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+ #day.week-mode .week-calendar{display:flex;align-items:stretch;width:max-content;min-height:100%;}
+ #day.week-mode .week-time-axis{position:sticky;left:0;z-index:5;flex:0 0 34px;width:34px;background:var(--bg)}
+ #day.week-mode .week-axis-head{height:38px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--muted);background:var(--bg)}
+ #day.week-mode .week-axis-all-day{height:44px;border-bottom:1px solid var(--accent-line)}
+ #day.week-mode .week-axis-hours{height:1026px;position:relative;background:repeating-linear-gradient(to bottom,transparent 0,transparent 53px,var(--accent-line) 53px,var(--accent-line) 54px)}
+ #day.week-mode .week-axis-hours span{position:absolute;right:4px;font-size:9px;color:var(--muted);background:var(--bg);padding-left:2px}
+ #day.week-mode .week-days-track{display:flex;align-items:stretch;width:max-content}
+ #day.week-mode .week-timeline-day{flex:0 0 78px;width:78px;min-width:78px;display:flex;flex-direction:column;background:transparent;border:0;border-radius:0;padding:0 3px;gap:0;overflow:visible}
+ #day.week-mode .week-timeline-head{position:sticky;top:0;z-index:3;height:38px;flex:0 0 38px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;border:0;padding:0;background:var(--bg);font-size:12px;color:var(--text)}
+ #day.week-mode .week-timeline-head span{font-size:10px;color:var(--muted);font-weight:500}
+ #day.week-mode .week-timeline-day.is-today .week-timeline-head b{color:var(--green);background:var(--accent-tint);border-radius:20px;padding:2px 7px}
+ #day.week-mode .week-all-day{height:44px;flex:0 0 44px;overflow:hidden;display:flex;flex-direction:column;gap:2px;padding:3px 1px;border-bottom:1px solid var(--accent-line)}
+ #day.week-mode .week-all-day-item{border:0;border-radius:5px;padding:3px 4px;text-align:left;font-size:9px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:17px}
+ #day.week-mode .week-all-day-empty{font-size:9px;color:var(--muted);text-align:center;padding-top:8px}
+ #day.week-mode .week-timeline-lane{height:1026px;flex:0 0 1026px;position:relative;background:repeating-linear-gradient(to bottom,transparent 0,transparent 53px,var(--accent-line) 53px,var(--accent-line) 54px);border-left:1px solid color-mix(in srgb,var(--accent-line) 55%,transparent)}
+ #day.week-mode .week-timeline-event{position:absolute;z-index:1;display:flex;flex-direction:column;align-items:flex-start;gap:2px;overflow:hidden;border:0;border-radius:6px;padding:4px 4px;text-align:left;font-size:10px;line-height:1.25;box-shadow:none}
+ #day.week-mode .week-timeline-event b{font-weight:650;overflow-wrap:anywhere}
+ #day.week-mode .week-timeline-event small{font-size:8px;opacity:.8;white-space:nowrap}
+ #day.week-mode .week-timeline-lane.is-drop-target{background-color:var(--accent-tint)}
+ #day.week-mode .week-undated-lane{background:transparent;border-left:1px dashed var(--accent-line)}
+}
+@media(min-width:601px){
+ #day.week-mode #weekGrid{overflow:auto;min-height:0;flex:1}
+ #day.week-mode .week-calendar{display:flex;min-width:100%;width:max-content}
+ #day.week-mode .week-time-axis{flex:0 0 48px;width:48px;position:sticky;left:0;z-index:5;background:var(--bg)}
+ #day.week-mode .week-axis-head{height:42px;font-size:11px;color:var(--muted);display:flex;align-items:center;justify-content:center}
+ #day.week-mode .week-axis-all-day{height:44px;border-bottom:1px solid var(--accent-line)}
+ #day.week-mode .week-axis-hours{height:1026px;position:relative;background:repeating-linear-gradient(to bottom,transparent 0,transparent 53px,var(--accent-line) 53px,var(--accent-line) 54px)}
+ #day.week-mode .week-axis-hours span{position:absolute;right:5px;font-size:10px;color:var(--muted)}
+ #day.week-mode .week-days-track{display:flex;flex:1}
+ #day.week-mode .week-timeline-day{flex:1 0 100px;min-width:100px;display:flex;flex-direction:column;gap:0;border:0;border-radius:0;padding:0 4px;background:transparent}
+ #day.week-mode .week-timeline-head{height:42px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:0;font-size:13px}
+ #day.week-mode .week-timeline-head span{font-size:11px;color:var(--muted)}
+ #day.week-mode .week-all-day{height:44px;overflow:hidden;display:flex;flex-direction:column;gap:2px;padding:3px;border-bottom:1px solid var(--accent-line)}
+ #day.week-mode .week-all-day-item{border:0;border-radius:5px;padding:3px 5px;text-align:left;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ #day.week-mode .week-all-day-empty{font-size:10px;color:var(--muted);text-align:center}
+ #day.week-mode .week-timeline-lane{height:1026px;position:relative;background:repeating-linear-gradient(to bottom,transparent 0,transparent 53px,var(--accent-line) 53px,var(--accent-line) 54px);border-left:1px solid color-mix(in srgb,var(--accent-line) 55%,transparent)}
+ #day.week-mode .week-timeline-event{position:absolute;display:flex;flex-direction:column;align-items:flex-start;gap:2px;overflow:hidden;border:0;border-radius:7px;padding:5px;font-size:11px;line-height:1.3;text-align:left}
+ #day.week-mode .week-timeline-event small{font-size:9px;opacity:.8}
+}
 </style>
 </head>
 <body>
@@ -826,26 +872,46 @@ function startOfWeek(date){const d=new Date(date);d.setHours(12,0,0,0);d.setDate
 function shiftDate(date,days){const d=new Date(date);d.setDate(d.getDate()+days);return d}
 function renderWeek(){
  const start=startOfWeek(selectedDate),days=Array.from({length:7},(_,i)=>shiftDate(start,i));
- const end=days[6];$("#weekTitle").textContent=`${start.getFullYear()}/${start.getMonth()+1}/${start.getDate()}〜${end.getMonth()+1}/${end.getDate()}`;
+ const end=days[6];
+ $("#weekTitle").textContent=`${start.getFullYear()}/${start.getMonth()+1}/${start.getDate()}〜${end.getMonth()+1}/${end.getDate()}`;
  const dayNames=["月","火","水","木","金","土","日"];
- const html=days.map((date,i)=>{
+ const hourPx=54,dayStart=5*60,dayEnd=24*60;
+ const axis=Array.from({length:20},(_,i)=>i).map(h=>h===19?"":`<span style="top:${h*hourPx-7}px">${String(h+5).padStart(2,"0")}:00</span>`).join("");
+ const columns=days.map((date,i)=>{
   const dateKey=key(date),dayEvents=getEventsForDate(dateKey);
   const linkedIds=new Set(dayEvents.filter(e=>e.taskId!=null).map(e=>String(e.taskId)));
-  const eventItems=dayEvents.map(ev=>{const linked=tasks.find(t=>String(t.id)===String(ev.taskId));return {kind:ev.taskId!=null?"task":"event",time:ev.allDay?"":(ev.start||""),title:ev.title,tag:ev.tag||"その他",allDay:!!ev.allDay,taskId:ev.taskId,done:!!linked?.done,detail:ev.allDay?"終日":(ev.start&&ev.end?`${ev.start}–${ev.end}`:"予定")}});
-  const taskItems=tasks.filter(t=>((t.plannedDate===dateKey)||(!t.plannedDate&&t.dueDate===dateKey))).filter(t=>!linkedIds.has(String(t.id))).map(t=>({kind:"task",time:"",title:t.title,tag:t.tag||"その他",taskId:t.id,done:!!t.done,detail:t.dueDate===dateKey&&!t.plannedDate?"締切":"タスク"}));
-  const entries=[...eventItems,...taskItems].sort((a,b)=>{
-   if(a.time&&b.time)return a.time.localeCompare(b.time);
-   if(a.time)return -1;if(b.time)return 1;
-   return a.kind==="event"&&b.kind!=="event"?-1:b.kind==="event"&&a.kind!=="event"?1:0;
-  });
-  const content=entries.map(item=>`<div class="week-entry ${item.kind}-entry ${item.done?"week-entry-done":""}" style="${tagInline(item.tag)}">${item.kind==="task"&&item.taskId!=null?`<input class="week-task-check" type="checkbox" data-week-task="${esc(item.taskId)}" ${item.done?"checked":""} aria-label="${esc(item.title)}を完了">`:""}<span class="week-entry-time">${item.time?esc(item.time):item.detail==="終日"?"終日":item.kind==="task"?"時刻未定":"予定"}</span><span class="week-entry-title">${esc(item.title)}</span>${item.detail&&item.detail!=="終日"&&item.detail!=="予定"?`<span class="week-entry-meta">${esc(item.detail)}</span>`:""}</div>`).join("");
-  return `<div class="week-day ${dateKey===key(today)?"week-today":""}" data-week-date="${dateKey}"><div class="week-day-head"><span class="week-day-name">${dayNames[i]}</span><span class="week-day-date">${date.getMonth()+1}/${date.getDate()}</span></div>${content||'<div class="week-empty">予定・タスクなし</div>'}</div>`;
+  const allDay=[...dayEvents.filter(e=>e.allDay).map(ev=>({title:ev.title,tag:ev.tag||"その他",eventId:ev.sourceId,date:dateKey})),...getTaskAllDayEntries(dateKey).map(t=>({title:t.title,tag:t.tag||"その他",taskId:t.id,date:dateKey,done:!!t.done}))];
+  const visible=dayEvents.filter(e=>!e.allDay).map(e=>({...e,_s:Math.max(dayStart,mins(e.start)),_e:Math.min(dayEnd,mins(e.end))})).filter(e=>e._e>e._s).sort((a,b)=>a._s-b._s||a._e-b._e);
+  let groups=[];
+  for(const ev of visible){let g=groups[groups.length-1];if(!g||ev._s>=g.end){g={items:[],end:ev._e};groups.push(g)}g.items.push(ev);g.end=Math.max(g.end,ev._e)}
+  for(const g of groups){let lanes=[];for(const ev of g.items){let lane=lanes.findIndex(x=>x<=ev._s);if(lane<0)lane=lanes.length;lanes[lane]=ev._e;ev._lane=lane}for(const ev of g.items)ev._lanes=lanes.length}
+  const cards=visible.map(ev=>{
+   const top=(ev._s-dayStart)*hourPx/60,height=Math.max(18,(ev._e-ev._s)*hourPx/60),w=100/ev._lanes,left=w*ev._lane,c=tagStyle(ev.tag);
+   return `<button type="button" class="week-timeline-event" data-week-event="${ev.sourceId}" data-week-date="${dateKey}" style="top:${top}px;height:${height}px;left:calc(${left}% + 2px);width:calc(${w}% - 4px);background:${c.bg};border-left:2px solid ${c.border};color:${c.text}"><b>${esc(ev.title)}</b><small>${ev.start}–${ev.end}</small></button>`;
+  }).join("");
+  const allDayHtml=allDay.map(item=>`<button type="button" class="week-all-day-item" style="${tagInline(item.tag)}" ${item.eventId? `data-week-event="${item.eventId}" data-week-date="${dateKey}"` : item.taskId!=null?`data-week-alltask="${esc(item.taskId)}"`:""}>${esc(item.title)}</button>`).join("")||'<span class="week-all-day-empty">—</span>';
+  const tasksForDay=tasks.filter(t=>(t.plannedDate===dateKey||(!t.plannedDate&&t.dueDate===dateKey))&&!linkedIds.has(String(t.id)));
+  const taskHtml=tasksForDay.map(t=>`<button type="button" class="week-all-day-item" style="${tagInline(t.tag||"その他")}" data-week-alltask="${esc(t.id)}">${esc(t.title)}</button>`).join("");
+  const allItems=allDayHtml+(taskHtml?taskHtml:"");
+  return `<section class="week-timeline-day ${dateKey===key(today)?"is-today":""}" data-week-date="${dateKey}">
+   <header class="week-timeline-head"><b>${dayNames[i]}</b><span>${date.getMonth()+1}/${date.getDate()}</span></header>
+   <div class="week-all-day">${allItems}</div>
+   <div class="week-timeline-lane" data-week-lane="${dateKey}">${cards}</div>
+  </section>`;
  }).join("");
  const undated=tasks.filter(t=>!t.done&&!t.plannedDate&&!events.some(ev=>String(ev.taskId)===String(t.id)));
- const undatedHtml=undated.map(t=>`<div class="week-entry task-entry" style="${tagInline(t.tag)}"><span class="week-entry-time">日付未定</span><span class="week-entry-title">${esc(t.title)}</span><span class="week-entry-meta">${t.minutes}分 · ${esc(t.tag||"その他")}</span></div>`).join("");
- $("#weekGrid").innerHTML=html+`<div class="week-day week-undated" data-week-undated="true"><div class="week-day-head"><span class="week-day-name">未定</span><span class="week-day-date">${undated.length}件</span></div>${undatedHtml||'<div class="week-empty">未配置タスクなし</div>'}</div>`;
- document.querySelectorAll("#weekGrid [data-week-task]").forEach(input=>input.onchange=()=>{const task=tasks.find(t=>String(t.id)===String(input.dataset.weekTask));if(task){task.done=input.checked;renderAll()}});
+ const undatedHtml=undated.map(t=>`<button type="button" class="week-all-day-item" style="${tagInline(t.tag||"その他")}" data-week-alltask="${esc(t.id)}">${esc(t.title)}</button>`).join("")||'<span class="week-all-day-empty">未配置なし</span>';
+ $("#weekGrid").innerHTML=`<div class="week-calendar"><div class="week-time-axis"><div class="week-axis-head">JST</div><div class="week-axis-all-day"></div><div class="week-axis-hours">${axis}</div></div><div class="week-days-track">${columns}<section class="week-timeline-day week-undated"><header class="week-timeline-head"><b>未定</b><span>${undated.length}件</span></header><div class="week-all-day">${undatedHtml}</div><div class="week-timeline-lane week-undated-lane"></div></section></div></div>`;
+ $$("#weekGrid [data-week-event]").forEach(el=>el.onclick=()=>showEventDetail(el.dataset.weekEvent,el.dataset.weekDate));
+ $$("#weekGrid [data-week-alltask]").forEach(el=>el.onclick=()=>{const t=tasks.find(x=>String(x.id)===String(el.dataset.weekAlltask));if(t){t.done=!t.done;renderAll()}});
+ $$("#weekGrid [data-week-lane]").forEach(lane=>{
+  lane.onclick=e=>{if(e.target.closest(".week-timeline-event"))return;const rect=lane.getBoundingClientRect(),raw=dayStart+(e.clientY-rect.top),at=Math.max(dayStart,Math.min(dayEnd-5,Math.round(raw/5)*5));openSheet(lane.dataset.weekLane,hm(at),hm(Math.min(at+60,dayEnd)))};
+  lane.ondragover=e=>{e.preventDefault();lane.classList.add("is-drop-target")};
+  lane.ondragleave=()=>lane.classList.remove("is-drop-target");
+  lane.ondrop=e=>{e.preventDefault();lane.classList.remove("is-drop-target");const payload=e.dataTransfer.getData("text/plain");if(!payload.startsWith("task:"))return;const t=tasks.find(x=>String(x.id)===payload.slice(5));if(!t)return;const rect=lane.getBoundingClientRect(),raw=dayStart+(e.clientY-rect.top),at=Math.max(dayStart,Math.min(dayEnd-5,Math.round(raw/5)*5));if(at+t.minutes>dayEnd)return;t.plannedDate=lane.dataset.weekLane;events=events.filter(ev=>String(ev.taskId)!==String(t.id));events.push({id:eventSeq++,taskId:t.id,title:t.title,start:hm(at),end:hm(at+t.minutes),type:"task",tag:t.tag||"勉強",date:lane.dataset.weekLane,repeat:"none",skipDates:[]});renderAll()};
+ });
 }
+
 $("#showWeekView").onclick=()=>setScheduleMode("week");$("#showDayView").onclick=()=>setScheduleMode("day");
 $("#prevWeek").onclick=()=>{selectedDate=shiftDate(selectedDate,-7);saveData();renderWeek()};
 $("#nextWeek").onclick=()=>{selectedDate=shiftDate(selectedDate,7);saveData();renderWeek()};
