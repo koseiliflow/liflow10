@@ -1078,7 +1078,7 @@ function renderWeek(){
  });
  $$("#weekGrid [data-week-task-open]").forEach(el=>el.onclick=e=>{e.stopPropagation();if(el.closest("[data-week-alltask]")?.dataset.dragMoved==="1"){el.closest("[data-week-alltask]").dataset.dragMoved="0";return}openTaskEditor(el.dataset.weekTaskOpen)});
  $$("#weekGrid [data-week-task-check]").forEach(el=>el.onchange=()=>{const t=tasks.find(x=>String(x.id)===String(el.dataset.weekTaskCheck));if(t){t.done=el.checked;renderAll()}});
- $$("#weekGrid [data-week-drag-task]").forEach(el=>{el.ondragstart=e=>{const t=tasks.find(x=>String(x.id)===String(el.dataset.weekDragTask));timelineDragDuration=t?.minutes||60;e.dataTransfer.setData("text/plain","task:"+el.dataset.weekDragTask);e.dataTransfer.effectAllowed="move";el.classList.add("is-dragging")};el.ondragend=()=>{el.classList.remove("is-dragging");$$("#weekGrid [data-week-lane]").forEach(l=>l.classList.remove("is-drop-target"));document.getSelection?.()?.removeAllRanges();el.dataset.dragMoved="1";requestAnimationFrame(()=>{el.dataset.dragMoved="0"})}});
+ $$("#weekGrid [data-week-drag-task]").forEach(el=>{el.ondragstart=e=>{const t=tasks.find(x=>String(x.id)===String(el.dataset.weekDragTask));timelineDragDuration=t?.minutes||60;e.dataTransfer.setData("text/plain","task:"+el.dataset.weekDragTask);e.dataTransfer.effectAllowed="move";el.classList.add("is-dragging")};el.ondragend=()=>{el.classList.remove("is-dragging");$("#weekGrid [data-week-drag-task]").forEach(x=>x.classList.remove("is-dragging"));$("#weekGrid [data-week-lane]").forEach(l=>l.classList.remove("is-drop-target"));document.getSelection?.()?.removeAllRanges();window.getSelection?.()?.removeAllRanges();if(document.activeElement?.matches?.("[data-week-task-open]"))document.activeElement.blur();document.querySelectorAll(".week-task-drag-ghost").forEach(x=>x.remove());el.dataset.dragMoved="1";requestAnimationFrame(()=>{el.dataset.dragMoved="0"})}});
  if(!grid.dataset.touchTaskDragBound){
   grid.dataset.touchTaskDragBound="1";
   let pending=null,ghost=null,moved=false;
@@ -1086,7 +1086,8 @@ function renderWeek(){
    if(pending?.item)pending.item.classList.remove("is-dragging");
    grid.querySelectorAll("[data-week-lane]").forEach(l=>l.classList.remove("is-drop-target"));
    if(ghost)ghost.remove();
-   document.getSelection?.()?.removeAllRanges();
+   document.getSelection?.()?.removeAllRanges();window.getSelection?.()?.removeAllRanges();
+   if(document.activeElement?.matches?.("[data-week-task-open]"))document.activeElement.blur();
    ghost=null;pending=null;moved=false;
   };
   const onPointerDown=e=>{
@@ -1134,8 +1135,8 @@ function renderWeek(){
   };
   grid.addEventListener("pointerdown",onPointerDown,{passive:false});
   document.addEventListener("pointermove",onPointerMove,{passive:false});
-  document.addEventListener("pointerup",onPointerUp);
-  document.addEventListener("pointercancel",onPointerUp);
+  document.addEventListener("pointerup",onPointerUp,true);
+  document.addEventListener("pointercancel",onPointerUp,true);
  }
  if(!grid.dataset.touchEventDragBound){
   grid.dataset.touchEventDragBound="1";
@@ -1200,6 +1201,11 @@ function renderWeek(){
   lane.ondragleave=()=>lane.classList.remove("is-drop-target");
   lane.ondrop=e=>{
    e.preventDefault();lane.classList.remove("is-drop-target");
+   $("#weekGrid [data-week-drag-task]").forEach(x=>x.classList.remove("is-dragging"));
+   $("#weekGrid [data-week-lane]").forEach(x=>x.classList.remove("is-drop-target"));
+   document.querySelectorAll(".week-task-drag-ghost").forEach(x=>x.remove());
+   document.getSelection?.()?.removeAllRanges();window.getSelection?.()?.removeAllRanges();
+   if(document.activeElement?.matches?.("[data-week-task-open]"))document.activeElement.blur();
    const payload=e.dataTransfer.getData("text/plain"),at=weekTimeAtY(lane,e.clientY);
    if(payload.startsWith("task:")){
     const t=tasks.find(x=>String(x.id)===payload.slice(5));if(!t)return;
