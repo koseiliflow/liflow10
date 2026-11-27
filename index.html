@@ -496,6 +496,16 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
  #day.week-mode .week-timeline-lane.is-drop-target{outline:2px solid var(--green);outline-offset:-2px}
  .week-task-drag-ghost{position:fixed;z-index:99999;pointer-events:none;opacity:.92;padding:8px 12px;border-radius:9px;box-shadow:0 5px 18px #0002;font-size:12px;max-width:180px;transform:translate(-50%,-120%)}
 }
+
+/* Stable hour rules: use real positioned elements rather than sub-pixel gradients */
+@media(max-width:600px){
+ #day.week-mode .week-axis-hours,#day.week-mode .week-timeline-lane{position:relative;background:none!important;background-image:none!important}
+ #day.week-mode .week-hour-rule{position:absolute;left:0;right:0;height:0;border-top:1px solid var(--accent-line);pointer-events:none;z-index:0}
+ #day.week-mode .week-timeline-event{z-index:2}
+ #day.week-mode .week-timeline-lane{overflow:hidden;touch-action:pan-y}
+ #day.week-mode #weekGrid.is-pinching .week-calendar{transform:none!important;will-change:auto!important}
+ #day.week-mode #weekGrid.is-zoomed .week-calendar{transform:none!important}
+}
 </style>
 </head>
 <body>
@@ -988,10 +998,10 @@ function renderWeek(){
  const gridHeight=grid.clientHeight||620;
  const baseHourPx=Math.max(12,(gridHeight-82)/19);
  const hourPx=baseHourPx*weekZoomLevel,laneHeight=hourPx*19;
- const hourLines=`repeating-linear-gradient(to bottom,transparent 0,transparent ${hourPx-1}px,var(--accent-line) ${hourPx-1}px,var(--accent-line) ${hourPx}px)`;
+ const hourRules=Array.from({length:20},(_,h)=>`<i class="week-hour-rule" style="top:${h*hourPx}px"></i>`).join("");
  const dayStart=5*60,dayEnd=24*60;
  const weekTimeAtY=(lane,y)=>{const rect=lane.getBoundingClientRect(),ratio=Math.max(0,Math.min(1,(y-rect.top)/Math.max(1,rect.height)));return Math.max(dayStart,Math.min(dayEnd-5,dayStart+Math.round((ratio*(dayEnd-dayStart))/5)*5))};
- const axis=Array.from({length:20},(_,i)=>i).map(h=>h===19?"":`<span style="top:${h*hourPx-7}px">${String(h+5).padStart(2,"0")}:00</span>`).join("");
+ const axis=Array.from({length:19},(_,h)=>`<span style="top:${h*hourPx-7}px">${String(h+5).padStart(2,"0")}:00</span>`).join("")+hourRules;
  const columns=days.map((date,i)=>{
   const dateKey=key(date),dayEvents=getEventsForDate(dateKey);
   const linkedIds=new Set(dayEvents.filter(e=>e.taskId!=null).map(e=>String(e.taskId)));
@@ -1011,7 +1021,7 @@ function renderWeek(){
   return `<section class="week-timeline-day ${dateKey===key(today)?"is-today":""}" data-week-date="${dateKey}">
    <header class="week-timeline-head"><b>${dayNames[i]}</b><span>${date.getMonth()+1}/${date.getDate()}</span></header>
    <div class="week-all-day">${allItems}</div>
-   <div class="week-timeline-lane" data-week-lane="${dateKey}" style="height:${laneHeight}px;background:${hourLines}">${cards}</div>
+   <div class="week-timeline-lane" data-week-lane="${dateKey}" style="height:${laneHeight}px;background:none">${hourRules}${cards}</div>
   </section>`;
  }).join("");
  const undated=tasks.filter(t=>!t.done&&!t.plannedDate&&!events.some(ev=>String(ev.taskId)===String(t.id)));
@@ -1021,8 +1031,8 @@ function renderWeek(){
  if(!grid.dataset.pinchBound){
   grid.dataset.pinchBound="1";
   grid.addEventListener("touchstart",e=>{if(e.touches.length===2){weekPinchStart=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);weekPinchBase=weekZoomLevel;grid.classList.add("is-pinching")}},{passive:true});
-  grid.addEventListener("touchmove",e=>{if(e.touches.length===2&&weekPinchStart){e.preventDefault();const distance=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);weekZoomLevel=Math.max(1,Math.min(3,weekPinchBase*distance/weekPinchStart));const visualScale=weekZoomLevel/weekPinchBase;const calendar=grid.querySelector(".week-calendar");if(calendar){calendar.style.transformOrigin="top left";calendar.style.transform=`scaleY(${visualScale})`;calendar.style.willChange="transform"}grid.classList.toggle("is-zoomed",weekZoomLevel>1.02)}},{passive:false});
-  const finishPinch=()=>{if(weekPinchStart){weekPinchStart=0;grid.classList.remove("is-pinching");renderWeek()}};grid.addEventListener("touchend",e=>{if(e.touches.length<2)finishPinch()},{passive:true});grid.addEventListener("touchcancel",finishPinch,{passive:true});
+  grid.addEventListener("touchmove",e=>{if(e.touches.length===2&&weekPinchStart){e.preventDefault();const distance=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);weekZoomLevel=Math.max(1,Math.min(3,weekPinchBase*distance/weekPinchStart));grid.classList.toggle("is-zoomed",weekZoomLevel>1.02)}},{passive:false});
+  const finishPinch=()=>{if(weekPinchStart){weekPinchStart=0;grid.classList.remove("is-pinching");const oldTop=grid.scrollTop;renderWeek();grid.scrollTop=oldTop}};grid.addEventListener("touchend",e=>{if(e.touches.length<2)finishPinch()},{passive:true});grid.addEventListener("touchcancel",finishPinch,{passive:true});
  }
  $("#weekGrid [data-week-event]").forEach(el=>el.onclick=()=>showEventDetail(el.dataset.weekEvent,el.dataset.weekDate));
  $("#weekGrid [data-week-alltask]").forEach(el=>el.onclick=e=>{if(el.dataset.dragMoved==="1"){el.dataset.dragMoved="0";e.preventDefault();return}const t=tasks.find(x=>String(x.id)===String(el.dataset.weekAlltask));if(t){t.done=!t.done;renderAll()}});
@@ -1457,9 +1467,22 @@ function renderMonth(){let y=monthDate.getFullYear(),m=monthDate.getMonth();$('#
   if(!drag?.active)return;
   const target=document.elementFromPoint(x,y);
   const cell=target?.closest('#monthGrid [data-date]');
+  const weekLane=target?.closest('#weekGrid [data-week-lane]');
   const weekCell=target?.closest('#weekGrid [data-week-date]');
   const layer=target?.closest('#eventLayer');
   if(cell&&$('#month').classList.contains('show')){placeOnMonth(drag.task,cell.dataset.date);closeDrawer();renderAll();return}
+  if(weekLane&&$('#day').classList.contains('show')&&$('#day').classList.contains('week-mode')){
+   const task=tasks.find(t=>String(t.id)===String(drag.task.id));
+   if(task){
+    const rect=weekLane.getBoundingClientRect(),raw=5*60+(y-rect.top)*60/Math.max(1,weekLane.offsetHeight/19);
+    const durationMinutes=Math.max(5,Number(task.minutes)||60);
+    const start=Math.max(5*60,Math.min(24*60-durationMinutes,Math.round(raw/5)*5));
+    task.plannedDate=weekLane.dataset.weekLane;task.allDay=false;
+    events=events.filter(ev=>String(ev.taskId)!==String(task.id));
+    events.push({id:eventSeq++,taskId:task.id,title:task.title,start:hm(start),end:hm(start+durationMinutes),type:'task',tag:task.tag||'勉強',date:weekLane.dataset.weekLane,repeat:'none',skipDates:[]});
+    saveData();closeDrawer();renderAll();return;
+   }
+  }
   if(weekCell&&$('#day').classList.contains('show')&&$('#day').classList.contains('week-mode')){const task=tasks.find(t=>String(t.id)===String(drag.task.id));if(task){task.plannedDate=weekCell.dataset.weekDate;events.filter(ev=>String(ev.taskId)===String(task.id)).forEach(ev=>{ev.date=weekCell.dataset.weekDate});closeDrawer();renderAll();return}}
   if(layer&&$('#day').classList.contains('show')){
    const rect=layer.getBoundingClientRect(),minute=5*60+(y-rect.top);
