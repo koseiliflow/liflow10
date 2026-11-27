@@ -390,6 +390,13 @@ main{flex:1;min-width:0;padding:32px clamp(18px,4vw,54px);max-width:1600px;margi
  #day.week-mode .week-timeline-event{position:absolute;display:flex;flex-direction:column;align-items:flex-start;gap:2px;overflow:hidden;border:0;border-radius:7px;padding:5px;font-size:11px;line-height:1.3;text-align:left}
  #day.week-mode .week-timeline-event small{font-size:9px;opacity:.8}
 }
+
+/* Fit the whole day by default; pinch outward to zoom and scroll */
+@media(max-width:600px){
+ #day.week-mode #weekGrid{overflow-x:auto!important;overflow-y:hidden!important;touch-action:pan-x pan-y;}
+ #day.week-mode #weekGrid.is-zoomed{overflow-y:auto!important;}
+ #day.week-mode .week-axis-hours,#day.week-mode .week-timeline-lane{background-repeat:repeat!important;}
+}
 </style>
 </head>
 <body>
@@ -870,12 +877,20 @@ let scheduleMode=window.matchMedia('(max-width:600px)').matches?'week':'day';
 function setScheduleMode(mode){scheduleMode=mode;const root=$("#day");root.classList.toggle("week-mode",mode==="week");$("#showWeekView").classList.toggle("active",mode==="week");$("#showDayView").classList.toggle("active",mode==="day");if(mode==="week")renderWeek();else renderDay()}
 function startOfWeek(date){const d=new Date(date);d.setHours(12,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7));return d}
 function shiftDate(date,days){const d=new Date(date);d.setDate(d.getDate()+days);return d}
+let weekZoomLevel=1;
+let weekPinchStart=0;
+let weekPinchBase=1;
 function renderWeek(){
  const start=startOfWeek(selectedDate),days=Array.from({length:7},(_,i)=>shiftDate(start,i));
  const end=days[6];
  $("#weekTitle").textContent=`${start.getFullYear()}/${start.getMonth()+1}/${start.getDate()}〜${end.getMonth()+1}/${end.getDate()}`;
  const dayNames=["月","火","水","木","金","土","日"];
- const hourPx=54,dayStart=5*60,dayEnd=24*60;
+ const grid=$("#weekGrid");
+ const gridHeight=grid.clientHeight||620;
+ const baseHourPx=Math.max(18,(gridHeight-82)/19);
+ const hourPx=baseHourPx*weekZoomLevel,laneHeight=hourPx*19;
+ const hourLines=`repeating-linear-gradient(to bottom,transparent 0,transparent ${hourPx-1}px,var(--accent-line) ${hourPx-1}px,var(--accent-line) ${hourPx}px)`;
+ const dayStart=5*60,dayEnd=24*60;
  const axis=Array.from({length:20},(_,i)=>i).map(h=>h===19?"":`<span style="top:${h*hourPx-7}px">${String(h+5).padStart(2,"0")}:00</span>`).join("");
  const columns=days.map((date,i)=>{
   const dateKey=key(date),dayEvents=getEventsForDate(dateKey);
@@ -896,13 +911,20 @@ function renderWeek(){
   return `<section class="week-timeline-day ${dateKey===key(today)?"is-today":""}" data-week-date="${dateKey}">
    <header class="week-timeline-head"><b>${dayNames[i]}</b><span>${date.getMonth()+1}/${date.getDate()}</span></header>
    <div class="week-all-day">${allItems}</div>
-   <div class="week-timeline-lane" data-week-lane="${dateKey}">${cards}</div>
+   <div class="week-timeline-lane" data-week-lane="${dateKey}" style="height:${laneHeight}px;background:${hourLines}">${cards}</div>
   </section>`;
  }).join("");
  const undated=tasks.filter(t=>!t.done&&!t.plannedDate&&!events.some(ev=>String(ev.taskId)===String(t.id)));
  const undatedHtml=undated.map(t=>`<button type="button" class="week-all-day-item" style="${tagInline(t.tag||"その他")}" data-week-alltask="${esc(t.id)}">${esc(t.title)}</button>`).join("")||'<span class="week-all-day-empty">未配置なし</span>';
- $("#weekGrid").innerHTML=`<div class="week-calendar"><div class="week-time-axis"><div class="week-axis-head">JST</div><div class="week-axis-all-day"></div><div class="week-axis-hours">${axis}</div></div><div class="week-days-track">${columns}<section class="week-timeline-day week-undated"><header class="week-timeline-head"><b>未定</b><span>${undated.length}件</span></header><div class="week-all-day">${undatedHtml}</div><div class="week-timeline-lane week-undated-lane"></div></section></div></div>`;
- $$("#weekGrid [data-week-event]").forEach(el=>el.onclick=()=>showEventDetail(el.dataset.weekEvent,el.dataset.weekDate));
+ $("#weekGrid").innerHTML=`<div class="week-calendar"><div class="week-time-axis"><div class="week-axis-head">JST</div><div class="week-axis-all-day"></div><div class="week-axis-hours" style="height:${laneHeight}px;background:${hourLines}">${axis}</div></div><div class="week-days-track">${columns}<section class="week-timeline-day week-undated"><header class="week-timeline-head"><b>未定</b><span>${undated.length}件</span></header><div class="week-all-day">${undatedHtml}</div><div class="week-timeline-lane week-undated-lane" style="height:${laneHeight}px;background:${hourLines}"></div></section></div></div>`;
+ grid.classList.toggle("is-zoomed",weekZoomLevel>1.02);
+ if(!grid.dataset.pinchBound){
+  grid.dataset.pinchBound="1";
+  grid.addEventListener("touchstart",e=>{if(e.touches.length===2){weekPinchStart=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);weekPinchBase=weekZoomLevel}},{passive:true});
+  grid.addEventListener("touchmove",e=>{if(e.touches.length===2&&weekPinchStart){e.preventDefault();const distance=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);weekZoomLevel=Math.max(1,Math.min(3.5,weekPinchBase*distance/weekPinchStart));grid.classList.toggle("is-zoomed",weekZoomLevel>1.02)}},{passive:false});
+  grid.addEventListener("touchend",e=>{if(e.touches.length<2&&weekPinchStart){weekPinchStart=0;renderWeek()}},{passive:true});
+ }
+ $("#weekGrid [data-week-event]").forEach(el=>el.onclick=()=>showEventDetail(el.dataset.weekEvent,el.dataset.weekDate));
  $$("#weekGrid [data-week-alltask]").forEach(el=>el.onclick=()=>{const t=tasks.find(x=>String(x.id)===String(el.dataset.weekAlltask));if(t){t.done=!t.done;renderAll()}});
  $$("#weekGrid [data-week-lane]").forEach(lane=>{
   lane.onclick=e=>{if(e.target.closest(".week-timeline-event"))return;const rect=lane.getBoundingClientRect(),raw=dayStart+(e.clientY-rect.top),at=Math.max(dayStart,Math.min(dayEnd-5,Math.round(raw/5)*5));openSheet(lane.dataset.weekLane,hm(at),hm(Math.min(at+60,dayEnd)))};
