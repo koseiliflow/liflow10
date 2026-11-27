@@ -1079,7 +1079,7 @@ function renderWeek(){
  });
  $$("#weekGrid [data-week-task-open]").forEach(el=>el.onclick=e=>{e.stopPropagation();if(el.closest("[data-week-alltask]")?.dataset.dragMoved==="1"){el.closest("[data-week-alltask]").dataset.dragMoved="0";return}openTaskEditor(el.dataset.weekTaskOpen)});
  $$("#weekGrid [data-week-task-check]").forEach(el=>el.onchange=()=>{const t=tasks.find(x=>String(x.id)===String(el.dataset.weekTaskCheck));if(t){t.done=el.checked;renderAll()}});
- $("#weekGrid [data-week-drag-task]").forEach(el=>{el.ondragstart=e=>{const t=tasks.find(x=>String(x.id)===String(el.dataset.weekDragTask));timelineDragDuration=t?.minutes||60;e.dataTransfer.setData("text/plain","task:"+el.dataset.weekDragTask);e.dataTransfer.effectAllowed="move";el.classList.add("is-dragging")};el.ondragend=()=>{el.classList.remove("is-dragging");$$("#weekGrid [data-week-drag-task]").forEach(x=>x.classList.remove("is-dragging"));$$("#weekGrid [data-week-lane]").forEach(l=>l.classList.remove("is-drop-target"));document.getSelection?.()?.removeAllRanges();window.getSelection?.()?.removeAllRanges();if(document.activeElement?.matches?.("[data-week-task-open]"))document.activeElement.blur();document.querySelectorAll(".week-task-drag-ghost").forEach(x=>x.remove());el.dataset.dragMoved="1";requestAnimationFrame(()=>{el.dataset.dragMoved="0"})}});
+ $$("#weekGrid [data-week-drag-task]").forEach(el=>{el.ondragstart=e=>{const t=tasks.find(x=>String(x.id)===String(el.dataset.weekDragTask));timelineDragDuration=t?.minutes||60;e.dataTransfer.setData("text/plain","task:"+el.dataset.weekDragTask);e.dataTransfer.effectAllowed="move";el.classList.add("is-dragging")};el.ondragend=()=>{el.classList.remove("is-dragging");$$$("#weekGrid [data-week-drag-task]").forEach(x=>x.classList.remove("is-dragging"));$$$("#weekGrid [data-week-lane]").forEach(l=>l.classList.remove("is-drop-target"));document.getSelection?.()?.removeAllRanges();window.getSelection?.()?.removeAllRanges();if(document.activeElement?.matches?.("[data-week-task-open]"))document.activeElement.blur();document.querySelectorAll(".week-task-drag-ghost").forEach(x=>x.remove());el.dataset.dragMoved="1";requestAnimationFrame(()=>{el.dataset.dragMoved="0"})}});
  if(!grid.dataset.touchTaskDragBound){
   grid.dataset.touchTaskDragBound="1";
   let pending=null,ghost=null,moved=false;
@@ -1196,14 +1196,14 @@ function renderWeek(){
   });
   document.addEventListener("pointercancel",()=>{clearEventDrag()});
  }
- $("#weekGrid [data-week-lane]").forEach(lane=>{
+ $$("#weekGrid [data-week-lane]").forEach(lane=>{
   lane.onclick=e=>{if(e.target.closest(".week-timeline-event"))return;const at=weekTimeAtY(lane,e.clientY);openSheet(lane.dataset.weekLane,hm(at),hm(Math.min(at+60,dayEnd)))};
   lane.ondragover=e=>{e.preventDefault();lane.classList.add("is-drop-target")};
   lane.ondragleave=()=>lane.classList.remove("is-drop-target");
   lane.ondrop=e=>{
    e.preventDefault();lane.classList.remove("is-drop-target");
-   $$("#weekGrid [data-week-drag-task]").forEach(x=>x.classList.remove("is-dragging"));
-   $$("#weekGrid [data-week-lane]").forEach(x=>x.classList.remove("is-drop-target"));
+   $$$("#weekGrid [data-week-drag-task]").forEach(x=>x.classList.remove("is-dragging"));
+   $$$("#weekGrid [data-week-lane]").forEach(x=>x.classList.remove("is-drop-target"));
    document.querySelectorAll(".week-task-drag-ghost").forEach(x=>x.remove());
    document.getSelection?.()?.removeAllRanges();window.getSelection?.()?.removeAllRanges();
    if(document.activeElement?.matches?.("[data-week-task-open]"))document.activeElement.blur();
@@ -1282,7 +1282,7 @@ function renderTasks(){
       <div style="padding-top:5px">${completedHtml||'<div class="empty">該当する終了タスクはありません</div>'}</div>
     </details>`;
   const searchInput=$("#taskSearch");if(searchInput)searchInput.oninput=()=>{taskSearchTerm=searchInput.value.trim().toLowerCase();$$("#taskListContent [data-task-search]").forEach(row=>{row.hidden=!!taskSearchTerm&&!row.dataset.taskSearch.includes(taskSearchTerm)});};
-  $("[data-tasktag]").forEach(b=>b.onclick=()=>{selectedTaskTag=b.dataset.tasktag;renderTasks()});
+  $ $("[data-tasktag]").forEach(b=>b.onclick=()=>{selectedTaskTag=b.dataset.tasktag;renderTasks()});
   $$("[data-taskcheck]").forEach(c=>c.onchange=()=>{tasks.find(t=>t.id==c.dataset.taskcheck).done=c.checked;renderAll()});
   $$("[data-edit-task]").forEach(b=>b.onclick=()=>openTaskEditor(b.dataset.editTask));
   $$("[data-delete]").forEach(b=>b.onclick=()=>{if(confirm("このタスクを削除しますか？")){tasks=tasks.filter(t=>String(t.id)!==String(b.dataset.delete));events=events.filter(ev=>String(ev.taskId)!==String(b.dataset.delete));renderAll()}});
